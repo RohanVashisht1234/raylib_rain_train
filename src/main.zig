@@ -4,7 +4,7 @@ const rl = @import("raylib");
 
 const MAX_COLUMNS = 20;
 
-pub fn main() anyerror!void {
+pub fn main() void {
     // Initialization
     //--------------------------------------------------------------------------------------
     const screenWidth = 1920;
