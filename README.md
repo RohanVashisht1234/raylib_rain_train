@@ -9,4 +9,4 @@
     - The rain only happened between those 500 blocks and not wherever you go.
     - The performance issue.
 - So, I thought of a plan, why not create rain only 10 x 10 x 2 block directly at the first person camera?
-- So, I did that, hence I heavily improved performance now, I read 17% CPU usage and only 20% gpu usage even while playing the game.
+- So, I did that, hence I heavily improved performance now, I read 17% CPU usage and only 20% gpu usage even while playing the game along with 100mb of ram.

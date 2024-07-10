@@ -1,5 +1,5 @@
-const rl = @import("raylib");
 const std = @import("std");
+const rl = @import("raylib");
 
 const screenWidth: u11 = 1080;
 const screenHeight: u11 = 720;
@@ -16,8 +16,8 @@ pub fn main() void {
 
     // Create First person Camera
     var camera = rl.Camera3D{
-        .position = rl.Vector3.init(4, 2, 4),
-        .target = rl.Vector3.init(0, 1.8, 0),
+        .position = rl.Vector3.init(-20, 3, 4),
+        .target = rl.Vector3.init(-20, -1.8, -1000000),
         .up = rl.Vector3.init(0, 1, 0),
         .fovy = 60.0,
         .projection = rl.CameraProjection.camera_perspective,
@@ -27,6 +27,14 @@ pub fn main() void {
     rl.setTargetFPS(60);
 
     // The Average height of each raindrop
+    const mine = rl.loadModel("./assets/train.glb");
+    const terrain = rl.loadModel("./assets/terrain.glb");
+    const tree = rl.loadModel("./assets/tree.glb");
+    const track = rl.loadModel("./assets/track.glb");
+    defer rl.unloadModel(mine);
+    defer rl.unloadModel(tree);
+    defer rl.unloadModel(track);
+    defer rl.unloadModel(terrain);
     var raindropAvgHeight: i32 = 5;
     // Game main loop
     while (!rl.windowShouldClose()) {
@@ -40,8 +48,7 @@ pub fn main() void {
             }
         }
 
-        camera.update(rl.CameraMode.camera_first_person);
-
+        camera.update(rl.CameraMode.camera_custom);
         rl.beginDrawing();
         defer rl.endDrawing();
 
@@ -51,8 +58,33 @@ pub fn main() void {
         {
             camera.begin();
             defer camera.end();
+            rl.drawModel(
+                mine,
+                rl.Vector3.init(camera.position.x , 3.5, camera.position.z+1),
+                0.1,
+                rl.Color.red,
+            );
+            var x: f32 = -20;
+            while (x < 20) : (x += 1) {
+                var z: f32 = -20;
+                while (z < 20) : (z += 1) {
+                    rl.drawModel(tree, rl.Vector3.init(x * 40, 12, z * 40), 0.3, rl.Color.dark_green);
+                    
+                }
+            }
 
+            var i:f32 = 0;
+            while(i < 500):(i+=1){
+                rl.drawModel(track, rl.Vector3.init(-20, 3, -i*20), 0.2, rl.Color.gray);
+            }
+            if(rl.isKeyDown(rl.KeyboardKey.key_w)){
+                camera.position.z -= 1.0;
+            }
             // Draw rain grid
+            if(rl.isKeyDown(rl.KeyboardKey.key_s)){
+                camera.position.z += 1.0;
+            }
+            
             var f: i8 = -10;
             while (f < 10) : (f += 1) {
                 var g: i8 = -10;
@@ -72,7 +104,7 @@ pub fn main() void {
             }
 
             // Draw ground
-            rl.drawCube(rl.Vector3.init(16.0, -0.4, 0.0), 500.0, 0.01, 500.0, rl.Color.dark_green);
+            rl.drawCube(rl.Vector3.init(0.0, 0, 0.0), 5000, 0.01, 5000,rl.Color.dark_brown);
 
             // Draw a blue wall for understansing where you are going.
             rl.drawCube(rl.Vector3.init(16.0, -0.4, 0.0), 1.0, 10, 50.0, rl.Color.dark_blue);
