@@ -1,18 +1,14 @@
-// raylib-zig (c) Nikolas Wipper 2023
-
 const rl = @import("raylib");
 
 const MAX_COLUMNS = 20;
 
+
 pub fn main() void {
-    // Initialization
-    //--------------------------------------------------------------------------------------
-    const screenWidth = 1920;
-    const screenHeight = 1080;
+    
     rl.initAudioDevice();
 
-    const mymusic:rl.Music = rl.loadMusicStream("./music/rn.mp3");
-    rl.playMusicStream(mymusic);
+    const bgMusic:rl.Music = rl.loadMusicStream("./music/rn.mp3");
+    rl.playMusicStream(bgMusic);
 
     rl.initWindow(screenWidth, screenHeight, "raylib-zig [core] example - 3d camera first person");
     defer rl.closeWindow(); // Close window and OpenGL context
@@ -44,18 +40,14 @@ pub fn main() void {
         );
     }
 
-    rl.disableCursor(); // Limit cursor to relative movement inside the window
-    rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
-    //--------------------------------------------------------------------------------------
-    // const modelPath = "./ml/tinker.obj"; // Replace with your .glb file path
-    // const model = rl.loadModel(modelPath);
-    // Main game loop
-    var x:f32 = 5.0;
-    while (!rl.windowShouldClose()): (x-=1.0) { // Detect window close button or ESC key
-    rl.updateMusicStream(mymusic);
+    rl.disableCursor();
+    rl.setTargetFPS(60);
+    var raindropAvgHeight:f32 = 5.0;
+    while (!rl.windowShouldClose()): (raindropAvgHeight-=1.0) { // Detect window close button or ESC key
+    rl.updateMusicStream(bgMusic);
         // Update
-        if(x<0.0){
-            x = 5.0;
+        if(raindropAvgHeight<0.0){
+            raindropAvgHeight = 5.0;
         }
         //----------------------------------------------------------------------------------
         camera.update(rl.CameraMode.camera_first_person);
@@ -77,7 +69,7 @@ pub fn main() void {
             while(f < 50.0): (f += 1.0){
                 var g:f32 = -50.0;
                 while(g < 50.0): (g += 1.0){
-                    rl.drawCube(rl.Vector3.init( f, x + @as(f32, @floatFromInt(rl.getRandomValue(0, 3))), g ), 0.01, 0.2, 0.01, rl.Color.blue);
+                    rl.drawCube(rl.Vector3.init( f, raindropAvgHeight + @as(f32, @floatFromInt(rl.getRandomValue(0, 3))), g ), 0.01, 0.2, 0.01, rl.Color.blue);
                 }
             }
             // rl.drawModel(model, rl.Vector3.init( 0.0, -2.0, 0.0 ), 0.1, rl.Color.brown);
