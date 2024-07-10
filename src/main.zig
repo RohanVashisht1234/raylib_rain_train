@@ -1,7 +1,8 @@
 const rl = @import("raylib");
+const std = @import("std");
 
-const screenWidth = 1920;
-const screenHeight = 1080;
+const screenWidth: u11 = 1080;
+const screenHeight: u11 = 720;
 
 pub fn main() void {
     // Initialize Audio
@@ -10,7 +11,7 @@ pub fn main() void {
     rl.playMusicStream(bgMusic);
 
     // Initialize Window
-    rl.initWindow(screenWidth, screenHeight, "raylib-zig [core] example - 3d camera first person");
+    rl.initWindow(screenWidth, screenHeight, "3d camera first person rain");
     defer rl.closeWindow();
 
     // Create First person Camera
@@ -18,7 +19,7 @@ pub fn main() void {
         .position = rl.Vector3.init(4, 2, 4),
         .target = rl.Vector3.init(0, 1.8, 0),
         .up = rl.Vector3.init(0, 1, 0),
-        .fovy = 60,
+        .fovy = 60.0,
         .projection = rl.CameraProjection.camera_perspective,
     };
 
@@ -26,17 +27,16 @@ pub fn main() void {
     rl.setTargetFPS(60);
 
     // The Average height of each raindrop
-    var raindropAvgHeight: f32 = 5.0;
-
+    var raindropAvgHeight: i32 = 5;
     // Game main loop
     while (!rl.windowShouldClose()) {
         rl.updateMusicStream(bgMusic);
 
         // Update raindrop height
         {
-            raindropAvgHeight -= 1.0;
-            if (raindropAvgHeight < 0.0) {
-                raindropAvgHeight = 5.0;
+            raindropAvgHeight -= 1;
+            if (raindropAvgHeight < 0) {
+                raindropAvgHeight = 5;
             }
         }
 
@@ -53,12 +53,16 @@ pub fn main() void {
             defer camera.end();
 
             // Draw rain grid
-            var f: f32 = -50.0;
-            while (f < 50.0) : (f += 1.0) {
-                var g: f32 = -50.0;
-                while (g < 50.0) : (g += 1.0) {
+            var f: i8 = -10;
+            while (f < 10) : (f += 1) {
+                var g: i8 = -10;
+                while (g < 10) : (g += 1) {
                     rl.drawCube(
-                        rl.Vector3.init(f, raindropAvgHeight + @as(f32, @floatFromInt(rl.getRandomValue(0, 3))), g),
+                        rl.Vector3.init(
+                            camera.position.x + @as(f32, @floatFromInt(f + rl.getRandomValue(0, 2))),
+                            @as(f16, @floatFromInt(raindropAvgHeight + rl.getRandomValue(0, 3))),
+                            camera.position.z + @as(f16, @floatFromInt(g + rl.getRandomValue(0, 2))),
+                        ),
                         0.01,
                         0.2,
                         0.01,
