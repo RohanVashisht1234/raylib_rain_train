@@ -5,11 +5,14 @@ const screenWidth: u11 = 1080;
 const screenHeight: u11 = 720;
 
 // Define the rules of the game
-const _rules = struct{
-    stop_at_next_station:bool,
-    iteration:u8,
-    crossed_the_station:bool,
-    failed:bool,
+const _rules = struct {
+    stop_at_next_station: bool,
+    iteration: u8,
+    crossed_the_station: bool,
+    failed: bool,
+    score: i32,
+    honked: bool,
+    show_instructions: bool,
 };
 
 pub fn main() void {
@@ -18,6 +21,9 @@ pub fn main() void {
         .iteration = 0,
         .failed = false,
         .crossed_the_station = false,
+        .score = 0,
+        .honked = false,
+        .show_instructions = true,
     };
     // Initialize Audio
     rl.initAudioDevice();
@@ -81,8 +87,6 @@ pub fn main() void {
 
         // Draw actual game
         {
-            
-            
             camera.begin();
             defer camera.end();
             rl.drawModel(
@@ -109,14 +113,12 @@ pub fn main() void {
             }
             rl.drawModel(train_station, rl.Vector3.init(-30, 2, 0), 0.3, rl.Color.gray);
             rl.drawModel(train_station, rl.Vector3.init(-30, 2, -2000), 0.3, rl.Color.gray);
-            
 
             var i: f32 = 0;
             while (i < 500) : (i += 1) {
                 rl.drawModel(track, rl.Vector3.init(-20, 3.5, -i * 20), 0.2, rl.Color.gray);
             }
 
-            
             camera.position.z -= speed;
             if (speed > 0) {
                 speed -= 0.001;
@@ -150,12 +152,11 @@ pub fn main() void {
             // std.debug.print("{}\n", .{camera.position.z});
 
             //bring train back to 0
-            if(camera.position.z < -2000){
+            if (camera.position.z < -2000) {
                 camera.position.z = 0;
                 rules.iteration += 1;
-                std.debug.print("{}", .{rules.iteration});
             }
-            
+
             var f: i8 = -10;
             while (f < 10) : (f += 1) {
                 var g: i8 = -10;
@@ -182,46 +183,70 @@ pub fn main() void {
         }
         // Text instructions screen
         {
-            rl.drawRectangle(10, 10, 250, 70, rl.Color.sky_blue.fade(0.5));
-            rl.drawRectangleLines(10, 10, 250, 70, rl.Color.blue);
-            rl.drawText("Train controls:", 20, 20, 10, rl.Color.black);
-            rl.drawText("- Go forward: W, Go back : S", 40, 40, 10, rl.Color.dark_gray);
-            rl.drawText("- Press H to Honk, Press B for breaks", 40, 60, 10, rl.Color.dark_gray);
+            if (rules.show_instructions) {
+                rl.drawRectangle(10, 10, 250, 110, rl.Color.sky_blue.fade(0.5));
+                rl.drawRectangleLines(10, 10, 250, 110, rl.Color.blue);
+                rl.drawText("Train controls:", 20, 20, 10, rl.Color.black);
+                rl.drawText("- Go forward: W, Go back : S", 40, 40, 10, rl.Color.dark_gray);
+                rl.drawText("- Press H to Honk, Press B for breaks", 40, 60, 10, rl.Color.dark_gray);
+                rl.drawText("- Honk at stations to increase score", 40, 80, 10, rl.Color.dark_gray);
+                rl.drawText("- Press I to hide these instructions", 40, 100, 10, rl.Color.dark_gray);
+            }
+            if (rl.isKeyPressed(rl.KeyboardKey.key_i)) {
+                if (rules.show_instructions) {
+                    rules.show_instructions = false;
+                } else {
+                    rules.show_instructions = true;
+                }
+            }
             if (rl.isKeyDown(rl.KeyboardKey.key_w) and speed > 5) {
-                rl.drawText("Max Speed", screenWidth/2-100, screenHeight/2-100, 20, rl.Color.red);
+                rl.drawText("Max Speed", screenWidth / 2 - 100, screenHeight / 2 - 100, 20, rl.Color.red);
             }
-            if(camera.position.z < -12 and camera.position.z > -20){
+            if (camera.position.z < -12 and camera.position.z > -20) {
                 rules.crossed_the_station = true;
+            } else {
+                rules.crossed_the_station = false;
             }
-            if(rules.iteration == 4){
+            if (rules.iteration == 4) {
                 rules.iteration = 0;
             }
-            if(rules.iteration!=0 and @rem(rules.iteration, 2) == 0 and rules.crossed_the_station){
+            if (rules.iteration != 0 and @rem(rules.iteration, 2) == 0 and rules.crossed_the_station) {
                 rules.stop_at_next_station = true; // after 1 station
                 rules.crossed_the_station = false;
             }
-            if(rules.stop_at_next_station and camera.position.z > -1980 and speed <= 0){
+            if (rules.stop_at_next_station and camera.position.z > -1980 and speed <= 0) {
                 rules.stop_at_next_station = false; // after 1 station
                 rules.iteration = 0;
                 // WIN
             }
-            if(rules.stop_at_next_station and rules.crossed_the_station){
+            if (rl.isKeyDown(rl.KeyboardKey.key_h) and camera.position.z > -1980 and !rules.honked) {
+                rules.honked = true;
+                rules.score += 100;
+            }
+            if (rules.stop_at_next_station and rules.crossed_the_station) {
                 rules.failed = true;
             }
-            if(rules.failed){
+            if (rules.crossed_the_station) {
+                rules.honked = false;
+            }
+            if (rules.failed) {
                 rl.drawRectangle(0, 0, screenWidth, screenHeight, rl.Color.dark_gray.fade(0.5));
                 rl.drawRectangleLines(10, 10, 250, 70, rl.Color.dark_gray);
-                rl.drawText("Failed", screenWidth/2-150, screenHeight/2-100, 200, rl.Color.red);
+                rl.drawText("Failed", screenWidth / 2 - 150, screenHeight / 2 - 100, 200, rl.Color.red);
             }
-            if(rules.stop_at_next_station){
-                rl.drawText("Stop at next station", screenWidth/2-50, screenHeight/2-50, 50, rl.Color.red);
+            if (rules.stop_at_next_station) {
+                rl.drawText("Stop at next station", screenWidth / 2 - 50, screenHeight / 2 - 50, 50, rl.Color.red);
             }
+            const fmt = "Your score: {d}";
+            const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
+            var buf: [len:0]u8 = undefined;
+            const text = std.fmt.bufPrintZ(&buf, fmt, .{rules.score}) catch unreachable;
 
-
-            if(camera.position.z > 0){
+            rl.drawText(text, screenWidth - 200, 10, 20, rl.Color.black);
+            if (camera.position.z > 0) {
                 camera.position.z = -0.1;
                 speed = 0;
-                rl.drawText("Wrong Direction", screenWidth/2-100, screenHeight/2-100, 20, rl.Color.red);
+                rl.drawText("Wrong Direction", screenWidth / 2 - 100, screenHeight / 2 - 100, 20, rl.Color.red);
             }
         }
     }
