@@ -27,14 +27,14 @@ pub fn main() void {
     };
     // Initialize Audio
     rl.initAudioDevice();
-    const bgMusic: rl.Music = rl.loadMusicStream("./music/rn.mp3");
+    const bgMusic: rl.Music = rl.loadMusicStream("./music/rna.mp3");
     rl.playMusicStream(bgMusic);
 
-    const trainMusic: rl.Music = rl.loadMusicStream("./music/train.mp3");
+    const trainMusic: rl.Music = rl.loadMusicStream("./music/traina.mp3");
     rl.playMusicStream(trainMusic);
     rl.setMusicVolume(trainMusic, 2);
 
-    const horn: rl.Music = rl.loadMusicStream("./music/horn.mp3");
+    const horn: rl.Music = rl.loadMusicStream("./music/horna.mp3");
     rl.playMusicStream(horn);
 
     // Initialize Window
@@ -94,28 +94,21 @@ pub fn main() void {
                 0.1,
                 rl.Color.red,
             );
-            // var x: f32 = -4;
-            // while (x < 4) : (x += 1) {
-            //     var z: f32 = -1;
-            //     while (z < 100) : (z += 1) {
-            //         rl.drawModel(tree, rl.Vector3.init(x * 40, 12, -z * 50), 0.3, rl.Color.dark_green);
-            //         rl.drawModel(train_station, rl.Vector3.init(-30, 2, -z * 2000), 0.3, rl.Color.gray);
-            //     }
-            // }
 
             var x: f32 = -4;
             while (x < 4) : (x += 1) {
                 var z: f32 = -1;
                 while (z < 100) : (z += 1) {
-                    rl.drawModel(tree, rl.Vector3.init(x * 40, 12, -z * 40), 0.3, rl.Color.dark_green);
+                    rl.drawModel(tree, rl.Vector3.init(x * 40, 12, -z * 43), 0.3, rl.Color.brown);
                 }
             }
-            rl.drawModel(train_station, rl.Vector3.init(-30, 2, 0), 0.3, rl.Color.gray);
-            rl.drawModel(train_station, rl.Vector3.init(-30, 2, -2000), 0.3, rl.Color.gray);
+            rl.drawModel(train_station, rl.Vector3.init(-30, 2.1, 0), 0.3, rl.Color.gray);
+            rl.drawModel(train_station, rl.Vector3.init(-30,2.1, -2000), 0.3, rl.Color.gray);
 
             var i: f32 = 0;
             while (i < 500) : (i += 1) {
-                rl.drawModel(track, rl.Vector3.init(-20, 3.5, -i * 20), 0.2, rl.Color.gray);
+                rl.drawModel(track, rl.Vector3.init(-20, 1.5, -i * 17), 0.15, rl.Color.init(169, 169, 169, 255));
+                rl.drawModel(track, rl.Vector3.init(-10, 1.5, -i * 17), 0.15, rl.Color.init(169, 169, 169, 255));
             }
 
             camera.position.z -= speed;
@@ -162,7 +155,7 @@ pub fn main() void {
                 while (g < 10) : (g += 1) {
                     rl.drawCube(
                         rl.Vector3.init(
-                            camera.position.x + @as(f32, @floatFromInt(f + rl.getRandomValue(1, 2))),
+                            camera.position.x + 0.5 + @as(f32, @floatFromInt(f + rl.getRandomValue(1, 2))),
                             @as(f16, @floatFromInt(raindropAvgHeight + rl.getRandomValue(0, 3))),
                             camera.position.z + @as(f16, @floatFromInt(g + rl.getRandomValue(0, 2))),
                         ),
@@ -175,7 +168,7 @@ pub fn main() void {
             }
 
             // Draw ground
-            rl.drawCube(rl.Vector3.init(0.0, 0, 0.0), 500, 0.01, 100000, rl.Color.dark_brown);
+            rl.drawCube(rl.Vector3.init(0.0, 0, 0.0), 500, 0.01, 7000, rl.Color.dark_brown);
 
             // Draw a blue wall for understansing where you are going.
             rl.drawCube(rl.Vector3.init(16.0, -0.4, 0.0), 1.0, 10, 50.0, rl.Color.dark_blue);
