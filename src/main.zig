@@ -50,7 +50,6 @@ pub fn main() void {
         .projection = rl.CameraProjection.camera_perspective,
     };
 
-    rl.disableCursor();
     rl.setTargetFPS(60);
 
     // The Average height of each raindrop
