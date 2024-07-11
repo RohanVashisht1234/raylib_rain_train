@@ -4,7 +4,21 @@ const rl = @import("raylib");
 const screenWidth: u11 = 1080;
 const screenHeight: u11 = 720;
 
+
+const _rules = struct{
+    stop_at_next_station:bool,
+    iteration:u8,
+    crossed_the_station:bool,
+    failed:bool,
+};
+
 pub fn main() void {
+    var rules = _rules{
+        .stop_at_next_station = false,
+        .iteration = 0,
+        .failed = false,
+        .crossed_the_station = false,
+    };
     // Initialize Audio
     rl.initAudioDevice();
     const bgMusic: rl.Music = rl.loadMusicStream("./music/rn.mp3");
@@ -59,6 +73,7 @@ pub fn main() void {
         }
 
         camera.update(rl.CameraMode.camera_custom);
+
         rl.beginDrawing();
         defer rl.endDrawing();
 
@@ -66,6 +81,8 @@ pub fn main() void {
 
         // Draw actual game
         {
+            
+            
             camera.begin();
             defer camera.end();
             rl.drawModel(
@@ -130,9 +147,13 @@ pub fn main() void {
             if (rl.isKeyDown(rl.KeyboardKey.key_s)) {
                 speed -= 0.01;
             }
-            std.debug.print("{}\n", .{camera.position.z});
+            // std.debug.print("{}\n", .{camera.position.z});
+
+            //bring train back to 0
             if(camera.position.z < -2000){
                 camera.position.z = 0;
+                rules.iteration += 1;
+                std.debug.print("{}", .{rules.iteration});
             }
             
             var f: i8 = -10;
@@ -169,6 +190,34 @@ pub fn main() void {
             if (rl.isKeyDown(rl.KeyboardKey.key_w) and speed > 5) {
                 rl.drawText("Max Speed", screenWidth/2-100, screenHeight/2-100, 20, rl.Color.red);
             }
+            if(camera.position.z < -12 and camera.position.z > -20){
+                rules.crossed_the_station = true;
+            }
+            if(rules.iteration == 4){
+                rules.iteration = 0;
+            }
+            if(rules.iteration!=0 and @rem(rules.iteration, 2) == 0 and rules.crossed_the_station){
+                rules.stop_at_next_station = true; // after 1 station
+                rules.crossed_the_station = false;
+            }
+            if(rules.stop_at_next_station and camera.position.z > -1980 and speed <= 0){
+                rules.stop_at_next_station = false; // after 1 station
+                rules.iteration = 0;
+                // WIN
+            }
+            if(rules.stop_at_next_station and rules.crossed_the_station){
+                rules.failed = true;
+            }
+            if(rules.failed){
+                rl.drawRectangle(0, 0, screenWidth, screenHeight, rl.Color.dark_gray.fade(0.5));
+                rl.drawRectangleLines(10, 10, 250, 70, rl.Color.dark_gray);
+                rl.drawText("Failed", screenWidth/2-150, screenHeight/2-100, 200, rl.Color.red);
+            }
+            if(rules.stop_at_next_station){
+                rl.drawText("Stop at next station", screenWidth/2-50, screenHeight/2-50, 50, rl.Color.red);
+            }
+
+
             if(camera.position.z > 0){
                 camera.position.z = -0.1;
                 speed = 0;
