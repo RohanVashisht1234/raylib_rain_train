@@ -123,7 +123,7 @@ pub fn main() void {
             if (speed > 0) {
                 speed -= 0.001;
                 rl.updateMusicStream(trainMusic);
-                if (speed > 0.09 and speed < 1) {
+                if (speed < 1) {
                     rl.setMusicPitch(trainMusic, speed);
                 }
                 // trainMusic.looping = true;
@@ -147,7 +147,7 @@ pub fn main() void {
             }
 
             if (rl.isKeyDown(rl.KeyboardKey.key_s)) {
-                speed -= 0.01;
+                speed -= 0.005;
             }
             // std.debug.print("{}\n", .{camera.position.z});
 
@@ -237,12 +237,21 @@ pub fn main() void {
             if (rules.stop_at_next_station) {
                 rl.drawText("Stop at next station", screenWidth / 2 - 50, screenHeight / 2 - 50, 50, rl.Color.red);
             }
-            const fmt = "Your score: {d}";
-            const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
-            var buf: [len:0]u8 = undefined;
-            const text = std.fmt.bufPrintZ(&buf, fmt, .{rules.score}) catch unreachable;
+            {
+                const fmt = "Your score: {d}";
+                const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
+                var buf: [len:0]u8 = undefined;
+                const text = std.fmt.bufPrintZ(&buf, fmt, .{rules.score}) catch unreachable;
+                rl.drawText(text, screenWidth - 220, 10, 20, rl.Color.black);
+            }
+            {
+                const fmt = "Your speed: {d} M/h";
+                const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
+                var buf: [len:0]u8 = undefined;
+                const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(speed * 2 * 10))}) catch unreachable;
+                rl.drawText(text, screenWidth - 220, 30, 20, rl.Color.black);
+            }
 
-            rl.drawText(text, screenWidth - 200, 10, 20, rl.Color.black);
             if (camera.position.z > 0) {
                 camera.position.z = -0.1;
                 speed = 0;
