@@ -30,6 +30,8 @@ pub fn main() void {
     const bgMusic: rl.Music = rl.loadMusicStream("./music/rn.mp3");
     rl.playMusicStream(bgMusic);
 
+    const lightning = rl.loadSound("./music/lightning.mp3");
+
     const trainMusic: rl.Music = rl.loadMusicStream("./music/train.mp3");
     rl.playMusicStream(trainMusic);
     rl.setMusicVolume(trainMusic, 2);
@@ -82,7 +84,12 @@ pub fn main() void {
         rl.beginDrawing();
         defer rl.endDrawing();
 
-        rl.clearBackground(rl.Color.gray);
+        if(rl.getRandomValue(0, 600) == 30){
+            rl.clearBackground(rl.Color.white);
+            rl.playSound(lightning);
+        } else{
+            rl.clearBackground(rl.Color.gray);
+        }
 
         // Draw actual game
         {
@@ -107,8 +114,8 @@ pub fn main() void {
 
             var i: f32 = 0;
             while (i < 500) : (i += 1) {
-                rl.drawModel(track, rl.Vector3.init(-20, 1.5, -i * 17), 0.15, rl.Color.init(169, 169, 169, 255));
-                rl.drawModel(track, rl.Vector3.init(-10, 1.5, -i * 17), 0.15, rl.Color.init(169, 169, 169, 255));
+                rl.drawModel(track, rl.Vector3.init(-20, 1.5, -i * 17), 0.15, rl.Color.dark_gray);
+                rl.drawModel(track, rl.Vector3.init(-10, 1.5, -i * 17), 0.15, rl.Color.dark_gray);
             }
 
             camera.position.z -= speed;
@@ -168,6 +175,8 @@ pub fn main() void {
             }
 
             // Draw ground
+            rl.drawCube(rl.Vector3.init(-9, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
+            rl.drawCube(rl.Vector3.init(-19, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
             rl.drawCube(rl.Vector3.init(0.0, 0, 0.0), 500, 0.01, 7000, rl.Color.dark_brown);
 
             // Draw a blue wall for understansing where you are going.
