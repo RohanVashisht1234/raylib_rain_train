@@ -27,14 +27,14 @@ pub fn main() void {
     };
     // Initialize Audio
     rl.initAudioDevice();
-    const bgMusic: rl.Music = rl.loadMusicStream("./music/rna.mp3");
+    const bgMusic: rl.Music = rl.loadMusicStream("./music/rn.mp3");
     rl.playMusicStream(bgMusic);
 
-    const trainMusic: rl.Music = rl.loadMusicStream("./music/traina.mp3");
+    const trainMusic: rl.Music = rl.loadMusicStream("./music/train.mp3");
     rl.playMusicStream(trainMusic);
     rl.setMusicVolume(trainMusic, 2);
 
-    const horn: rl.Music = rl.loadMusicStream("./music/horna.mp3");
+    const horn: rl.Music = rl.loadMusicStream("./music/horn.mp3");
     rl.playMusicStream(horn);
 
     // Initialize Window
