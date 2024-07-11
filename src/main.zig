@@ -12,6 +12,7 @@ pub fn main() void {
 
     const trainMusic: rl.Music = rl.loadMusicStream("./music/train.mp3");
     rl.playMusicStream(trainMusic);
+    rl.setMusicVolume(trainMusic, 2);
 
     const horn: rl.Music = rl.loadMusicStream("./music/horn.mp3");
     rl.playMusicStream(horn);
@@ -108,6 +109,7 @@ pub fn main() void {
                 }
                 // trainMusic.looping = true;
             }
+
             if (rl.isKeyDown(rl.KeyboardKey.key_h)) {
                 rl.updateMusicStream(horn);
             }
