@@ -4,7 +4,7 @@ const rl = @import("raylib");
 const screenWidth: u11 = 1080;
 const screenHeight: u11 = 720;
 
-
+// Define the rules of the game
 const _rules = struct{
     stop_at_next_station:bool,
     iteration:u8,
