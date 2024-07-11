@@ -73,14 +73,25 @@ pub fn main() void {
                 0.1,
                 rl.Color.red,
             );
+            // var x: f32 = -4;
+            // while (x < 4) : (x += 1) {
+            //     var z: f32 = -1;
+            //     while (z < 100) : (z += 1) {
+            //         rl.drawModel(tree, rl.Vector3.init(x * 40, 12, -z * 50), 0.3, rl.Color.dark_green);
+            //         rl.drawModel(train_station, rl.Vector3.init(-30, 2, -z * 2000), 0.3, rl.Color.gray);
+            //     }
+            // }
+
             var x: f32 = -4;
             while (x < 4) : (x += 1) {
                 var z: f32 = -1;
                 while (z < 100) : (z += 1) {
-                    rl.drawModel(tree, rl.Vector3.init(x * 40, 12, -z * 50), 0.3, rl.Color.dark_green);
-                    rl.drawModel(train_station, rl.Vector3.init(-30, 2, -z * 2000), 0.3, rl.Color.gray);
+                    rl.drawModel(tree, rl.Vector3.init(x * 40, 12, -z * 40), 0.3, rl.Color.dark_green);
                 }
             }
+            rl.drawModel(train_station, rl.Vector3.init(-30, 2, 0), 0.3, rl.Color.gray);
+            rl.drawModel(train_station, rl.Vector3.init(-30, 2, -2000), 0.3, rl.Color.gray);
+            
 
             var i: f32 = 0;
             while (i < 500) : (i += 1) {
