@@ -40,7 +40,7 @@ pub fn main() void {
 
     // -------------------- Create First person Camera ------------------------
     var camera = rl.Camera3D{
-        .position = rl.Vector3.init(20, 3, 4),
+        .position = rl.Vector3.init(20, 4, 4),
         .target = rl.Vector3.init(20, -1.8, 10000000),
         .up = rl.Vector3.init(0, 1, 0),
         .fovy = 60.0,
@@ -57,6 +57,8 @@ pub fn main() void {
     const track = rl.loadModel("./assets/track.glb");
     defer rl.unloadModel(track);
     const train_station = rl.loadModel("./assets/train_station.glb");
+    defer rl.unloadModel(train_station);
+    const sign = rl.loadModel("./assets/sign.glb");
     defer rl.unloadModel(train_station);
 
     // -------- Important mutable variables -------------
@@ -170,7 +172,6 @@ pub fn main() void {
                 // Update rain music
                 rl.updateMusicStream(rainMusic);
             }
-
             var x: f32 = -4;
             while (x < 4) : (x += 1) {
                 var z: f32 = -1;
@@ -184,13 +185,18 @@ pub fn main() void {
                 rl.drawModel(track, rl.Vector3.init(20, 1.5, i * 17), 0.15, rl.Color.dark_gray);
                 rl.drawModel(track, rl.Vector3.init(10, 1.5, i * 17), 0.15, rl.Color.dark_gray);
             }
+            {
+                var z:f32 = 0;
+                while (z < 4) : (z += 1) {
+                    rl.drawModel(sign, rl.Vector3.init(30, 2, z * 405), 0.1, rl.Color.gray);
+                }
+            }
             rl.drawModel(train_station, rl.Vector3.init(35, 3.4, -9), 0.3, rl.Color.gray);
             rl.drawModel(train_station, rl.Vector3.init(35, 3.4, 1990), 0.3, rl.Color.gray);
             rl.drawCube(rl.Vector3.init(11, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
             rl.drawCube(rl.Vector3.init(20.8, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
             rl.drawCube(rl.Vector3.init(0.0, 0, 0.0), 500, 0.01, 7000, rl.Color.dark_brown);
         }
-
         // Text instructions screen
         {
             if (rules.show_instructions) {
@@ -233,7 +239,7 @@ pub fn main() void {
                 rules.honked = true;
                 rules.score += 100;
             }
-            
+
             if (!rules.within_station_boundary) {
                 rules.honked = false;
             }
@@ -246,14 +252,14 @@ pub fn main() void {
                 rl.drawText("Stop at next station", constants.screenWidth / 2 - 50, constants.screenHeight / 2 - 50, 50, rl.Color.red);
             }
             {
-                const fmt = "Your score: {d}";
+                const fmt = "Score: {d}";
                 const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
                 var buf: [len:0]u8 = undefined;
                 const text = std.fmt.bufPrintZ(&buf, fmt, .{rules.score}) catch unreachable;
                 rl.drawText(text, constants.screenWidth - 220, 10, 20, rl.Color.black);
             }
             {
-                const fmt = "Your speed: {d} M/h";
+                const fmt = "Speed: {d} M/h";
                 const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
                 var buf: [len:0]u8 = undefined;
                 const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(speed * 2 * 10))}) catch unreachable;
