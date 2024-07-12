@@ -66,6 +66,8 @@ pub fn main() void {
     defer rl.unloadModel(track_bent);
     const track_bent_r = rl.loadModel("./assets/track_bent_r.glb");
     defer rl.unloadModel(track_bent_r);
+    const mountains = rl.loadModel("./assets/mountains.glb");
+    defer rl.unloadModel(mountains);
 
     // -------- Important mutable variables -------------
     var speed: f32 = 0;
@@ -185,6 +187,13 @@ pub fn main() void {
                     rl.drawModel(tree, rl.Vector3.init(x * 40, 12, z * 40), 0.3, rl.Color.brown);
                 }
             }
+            {
+                var z:f32 = 0;
+                    while (z < 40) : (z += 1) {
+                        rl.drawModel(mountains, rl.Vector3.init(-300, 30, z * 200), 2, rl.Color.light_gray);
+                        rl.drawModel(mountains, rl.Vector3.init(150, 30, z * 200), 2, rl.Color.light_gray);
+                    }
+            }
 
             var i: f32 = 0;
             while (i < 500) : (i += 1) {
@@ -290,6 +299,7 @@ pub fn main() void {
                 if(rules.stop_at_next_station){
                     rl.drawText("Status: Stop at", constants.screenWidth - 220, 70, 20, rl.Color.red);
                     rl.drawText("          next station", constants.screenWidth - 220, 90, 20, rl.Color.red);
+                    rl.drawText("Stop at Next station", constants.screenWidth - 500, 300, 25, rl.Color.red);
                 } else {
                     rl.drawText("Status: Don't stop", constants.screenWidth - 220, 70, 20, rl.Color.green);
                 }
