@@ -60,6 +60,12 @@ pub fn main() void {
     defer rl.unloadModel(train_station);
     const sign = rl.loadModel("./assets/sign.glb");
     defer rl.unloadModel(train_station);
+    const electricity = rl.loadModel("./assets/electricity.glb");
+    defer rl.unloadModel(electricity);
+    const track_bent = rl.loadModel("./assets/track_bent.glb");
+    defer rl.unloadModel(track_bent);
+    const track_bent_r = rl.loadModel("./assets/track_bent_r.glb");
+    defer rl.unloadModel(track_bent_r);
 
     // -------- Important mutable variables -------------
     var speed: f32 = 0;
@@ -187,6 +193,13 @@ pub fn main() void {
             }
             {
                 var z:f32 = 1;
+                // rl.drawModel(electricity, rl.Vector3.init(30, 2,  200), 0.1, rl.Color.gray);
+                while (z < 50) : (z += 1) {
+                    rl.drawModel(electricity, rl.Vector3.init(23.5, 6, z * 60), 0.1, rl.Color.gray);
+                }
+            }
+            {
+                var z:f32 = 1;
                 rl.drawModel(sign, rl.Vector3.init(30, 2,  200), 0.1, rl.Color.gray);
                 while (z < 8) : (z += 1) {
                     rl.drawModel(sign, rl.Vector3.init(30, 2, z * 550), 0.1, rl.Color.gray);
@@ -195,7 +208,10 @@ pub fn main() void {
             rl.drawModel(train_station, rl.Vector3.init(35, 3.4, -9), 0.3, rl.Color.gray);
             rl.drawModel(train_station, rl.Vector3.init(35, 3.4, 1990), 0.3, rl.Color.gray);
             rl.drawCube(rl.Vector3.init(11, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
+            rl.drawModel(track_bent_r, rl.Vector3.init(15.7, 1.5, 50), 0.15, rl.Color.dark_gray);
+            rl.drawModel(track_bent, rl.Vector3.init(15.7, 1.5, 1720), 0.15, rl.Color.dark_gray);
             rl.drawCube(rl.Vector3.init(20.8, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
+            rl.drawCube(rl.Vector3.init(21, 8, 0.0), 0.1, 0.1, 7000, rl.Color.black);
             rl.drawCube(rl.Vector3.init(0.0, 0, 0.0), 500, 0.01, 7000, rl.Color.dark_brown);
         }
         // Text instructions screen
@@ -216,7 +232,7 @@ pub fn main() void {
                     rules.show_instructions = true;
                 }
             }
-            std.debug.print("{}\n", .{@as(i32, @intFromFloat(camera.position.z))});
+            // std.debug.print("{}\n", .{@as(i32, @intFromFloat(camera.position.z))});
             if (rl.isKeyDown(rl.KeyboardKey.key_w) and speed > 5.1) {
                 rl.drawText("Max Speed", constants.screenWidth / 2 - 100, constants.screenHeight / 2 - 100, 20, rl.Color.red);
             }
@@ -249,9 +265,6 @@ pub fn main() void {
                 rl.drawRectangleLines(10, 10, 250, 70, rl.Color.dark_gray);
                 rl.drawText("Failed", constants.screenWidth / 2 - 150, constants.screenHeight / 2 - 100, 200, rl.Color.red);
             }
-            if (rules.stop_at_next_station) {
-                rl.drawText("Stop at next station", constants.screenWidth / 2 - 50, constants.screenHeight / 2 - 50, 50, rl.Color.red);
-            }
             {
                 const fmt = "Score: {d}";
                 const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
@@ -265,6 +278,21 @@ pub fn main() void {
                 var buf: [len:0]u8 = undefined;
                 const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(speed * 2 * 10))}) catch unreachable;
                 rl.drawText(text, constants.screenWidth - 220, 30, 20, rl.Color.black);
+            }
+            {
+                const fmt = "Next station: {d} m";
+                const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
+                var buf: [len:0]u8 = undefined;
+                const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(2000-camera.position.z))}) catch unreachable;
+                rl.drawText(text, constants.screenWidth - 220, 50, 20, rl.Color.black);
+            }
+            {
+                if(rules.stop_at_next_station){
+                    rl.drawText("Status: Stop at", constants.screenWidth - 220, 70, 20, rl.Color.red);
+                    rl.drawText("          next station", constants.screenWidth - 220, 90, 20, rl.Color.red);
+                } else {
+                    rl.drawText("Status: Don't stop", constants.screenWidth - 220, 70, 20, rl.Color.green);
+                }
             }
 
             if (camera.position.z < 0) {
