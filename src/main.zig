@@ -186,9 +186,10 @@ pub fn main() void {
                 rl.drawModel(track, rl.Vector3.init(10, 1.5, i * 17), 0.15, rl.Color.dark_gray);
             }
             {
-                var z:f32 = 0;
-                while (z < 4) : (z += 1) {
-                    rl.drawModel(sign, rl.Vector3.init(30, 2, z * 405), 0.1, rl.Color.gray);
+                var z:f32 = 1;
+                rl.drawModel(sign, rl.Vector3.init(30, 2,  200), 0.1, rl.Color.gray);
+                while (z < 8) : (z += 1) {
+                    rl.drawModel(sign, rl.Vector3.init(30, 2, z * 550), 0.1, rl.Color.gray);
                 }
             }
             rl.drawModel(train_station, rl.Vector3.init(35, 3.4, -9), 0.3, rl.Color.gray);
