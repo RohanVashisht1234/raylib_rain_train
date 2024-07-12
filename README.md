@@ -1,4 +1,4 @@
-# A basic train rain game in Raylib (Zig)
+# Train simulator in Zig raylib
 
 Simple clone the repo and build it.
 
