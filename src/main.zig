@@ -1,124 +1,105 @@
 const std = @import("std");
 const rl = @import("raylib");
-
-const screenWidth: u11 = 1080;
-const screenHeight: u11 = 720;
-
-// Define the rules of the game
-const _rules = struct {
-    stop_at_next_station: bool,
-    iteration: u8,
-    crossed_the_station: bool,
-    failed: bool,
-    score: i32,
-    honked: bool,
-    show_instructions: bool,
-};
+const constants = @import("constants.zig");
 
 pub fn main() void {
-    var rules = _rules{
+    // ----------- Set rules -------------
+    var rules = constants._rules{
         .stop_at_next_station = false,
         .iteration = 0,
         .failed = false,
-        .crossed_the_station = false,
+        .within_station_boundary = false,
         .score = 0,
         .honked = false,
         .show_instructions = true,
     };
-    // Initialize Audio
+
+    // ------------------ Initialize Audio ---------------------
     rl.initAudioDevice();
-    const bgMusic: rl.Music = rl.loadMusicStream("./music/rn.mp3");
-    rl.playMusicStream(bgMusic);
+
+    const rainMusic = rl.loadMusicStream("./music/rn.mp3");
+    rl.playMusicStream(rainMusic);
+    defer rl.unloadMusicStream(rainMusic);
 
     const lightning = rl.loadSound("./music/lightning.mp3");
+    defer rl.unloadSound(lightning);
 
-    const trainMusic: rl.Music = rl.loadMusicStream("./music/train.mp3");
+    const trainMusic = rl.loadMusicStream("./music/train.mp3");
     rl.playMusicStream(trainMusic);
     rl.setMusicVolume(trainMusic, 2);
+    defer rl.unloadMusicStream(trainMusic);
 
     const horn: rl.Music = rl.loadMusicStream("./music/horn.mp3");
     rl.playMusicStream(horn);
+    defer rl.unloadMusicStream(horn);
 
-    // Initialize Window
-    rl.initWindow(screenWidth, screenHeight, "3d camera first person rain");
+    // ----------- Initialize Window -------------
+    rl.initWindow(constants.screenWidth, constants.screenHeight, "3d camera first person rain");
     defer rl.closeWindow();
+    rl.setTargetFPS(60);
 
-    // Create First person Camera
+    // -------------------- Create First person Camera ------------------------
     var camera = rl.Camera3D{
-        .position = rl.Vector3.init(-20, 3, 4),
-        .target = rl.Vector3.init(-20, -1.8, -1000000),
+        .position = rl.Vector3.init(20, 3, 4),
+        .target = rl.Vector3.init(20, -1.8, 10000000),
         .up = rl.Vector3.init(0, 1, 0),
         .fovy = 60.0,
         .projection = rl.CameraProjection.camera_perspective,
     };
 
-    rl.setTargetFPS(60);
-
-    // The Average height of each raindrop
-    const mine = rl.loadModel("./assets/train.glb");
+    // -------------- Load and Store 3D Models ------------------
+    const train = rl.loadModel("./assets/train.glb");
+    defer rl.unloadModel(train);
     const terrain = rl.loadModel("./assets/terrain.glb");
-    const tree = rl.loadModel("./assets/tree.glb");
-    const track = rl.loadModel("./assets/track.glb");
-    const train_station = rl.loadModel("./assets/train_station.glb");
-    defer rl.unloadModel(mine);
-    defer rl.unloadModel(tree);
-    defer rl.unloadModel(track);
     defer rl.unloadModel(terrain);
+    const tree = rl.loadModel("./assets/tree.glb");
+    defer rl.unloadModel(tree);
+    const track = rl.loadModel("./assets/track.glb");
+    defer rl.unloadModel(track);
+    const train_station = rl.loadModel("./assets/train_station.glb");
     defer rl.unloadModel(train_station);
+
+    // -------- Important mutable variables -------------
     var speed: f32 = 0;
     var raindropAvgHeight: i32 = 5;
-    // Game main loop
-    while (!rl.windowShouldClose()) {
-        rl.updateMusicStream(bgMusic);
 
-        // Update raindrop height
+    // =-=-=-=-= Game Loop =-=-=-=-=-=
+    while (!rl.windowShouldClose()) {
+        // Normal updates
         {
-            raindropAvgHeight -= 1;
-            if (raindropAvgHeight < 0) {
-                raindropAvgHeight = 5;
-            }
+            camera.update(rl.CameraMode.camera_custom);
+            rl.beginDrawing();
+            defer rl.endDrawing();
         }
 
-        camera.update(rl.CameraMode.camera_custom);
-
-        rl.beginDrawing();
-        defer rl.endDrawing();
-
-        if(rl.getRandomValue(0, 600) == 30){
-            rl.clearBackground(rl.Color.white);
-            rl.playSound(lightning);
-        } else{
-            rl.clearBackground(rl.Color.gray);
+        // Every time result is 30, do a lightning, with lightning effects.
+        {
+            if (rl.getRandomValue(0, 600) == 30) {
+                rl.clearBackground(rl.Color.white);
+                rl.playSound(lightning);
+            } else {
+                rl.clearBackground(rl.Color.gray);
+            }
         }
 
         // Draw actual game
         {
+            // Camera config
             camera.begin();
             defer camera.end();
+            rl.beginMode3D(camera);
+            defer rl.endMode3D();
             rl.drawModel(
-                mine,
-                rl.Vector3.init(camera.position.x, 3.5, camera.position.z + 1),
+                train,
+                rl.Vector3.init(camera.position.x + 4, 3.5, camera.position.z - 4),
                 0.1,
                 rl.Color.red,
             );
 
-            var x: f32 = -4;
-            while (x < 4) : (x += 1) {
-                var z: f32 = -1;
-                while (z < 100) : (z += 1) {
-                    rl.drawModel(tree, rl.Vector3.init(x * 40, 12, -z * 43), 0.3, rl.Color.brown);
-                }
-            }
-            rl.drawModel(train_station, rl.Vector3.init(-30, 2.1, 0), 0.3, rl.Color.gray);
-            rl.drawModel(train_station, rl.Vector3.init(-30,2.1, -2000), 0.3, rl.Color.gray);
+            // Camera's position should increase due to speed.
 
-            var i: f32 = 0;
-            while (i < 500) : (i += 1) {
-                rl.drawModel(track, rl.Vector3.init(-20, 1.5, -i * 17), 0.15, rl.Color.dark_gray);
-                rl.drawModel(track, rl.Vector3.init(-10, 1.5, -i * 17), 0.15, rl.Color.dark_gray);
-            }
+            camera.position.z += speed;
 
-            camera.position.z -= speed;
             if (speed > 0) {
                 speed -= 0.001;
                 rl.updateMusicStream(trainMusic);
@@ -128,20 +109,25 @@ pub fn main() void {
                 // trainMusic.looping = true;
             }
 
+            // Play horn
             if (rl.isKeyDown(rl.KeyboardKey.key_h)) {
                 rl.updateMusicStream(horn);
             }
+
+            // reset playing horn
             if (rl.isKeyReleased(rl.KeyboardKey.key_h)) {
                 rl.seekMusicStream(horn, 0);
             }
 
+            // Increase speed
             if (rl.isKeyDown(rl.KeyboardKey.key_w) and speed < 5.1) {
                 speed += 0.005;
             }
 
+            // Breaks
             if (rl.isKeyDown(rl.KeyboardKey.key_b)) {
                 if (speed > 0) {
-                    speed -= 0.04;
+                    speed -= 0.02;
                 }
             }
 
@@ -150,38 +136,61 @@ pub fn main() void {
             }
             // std.debug.print("{}\n", .{camera.position.z});
 
-            //bring train back to 0
-            if (camera.position.z < -2000) {
+            // bring train back to 0
+            if (camera.position.z > 2000) {
                 camera.position.z = 0;
                 rules.iteration += 1;
             }
 
-            var f: i8 = -10;
-            while (f < 10) : (f += 1) {
-                var g: i8 = -10;
-                while (g < 10) : (g += 1) {
-                    rl.drawCube(
-                        rl.Vector3.init(
-                            camera.position.x + 0.5 + @as(f32, @floatFromInt(f + rl.getRandomValue(1, 2))),
-                            @as(f16, @floatFromInt(raindropAvgHeight + rl.getRandomValue(0, 3))),
-                            camera.position.z + @as(f16, @floatFromInt(g + rl.getRandomValue(0, 2))),
-                        ),
-                        0.01,
-                        0.2,
-                        0.01,
-                        rl.Color.blue,
-                    );
+            // ------- Rain related updates --------
+            {
+                // Update Rain height
+                raindropAvgHeight -= 1;
+                if (raindropAvgHeight < 0) {
+                    raindropAvgHeight = 5;
+                }
+                // Create rain
+                var rain_x: i8 = -10;
+                while (rain_x < 10) : (rain_x += 1) {
+                    var rain_y: i8 = -10;
+                    while (rain_y < 10) : (rain_y += 1) {
+                        rl.drawCube(
+                            rl.Vector3.init(
+                                camera.position.x + 0.5 + @as(f16, @floatFromInt(rain_x + rl.getRandomValue(1, 2))),
+                                @as(f16, @floatFromInt(raindropAvgHeight + rl.getRandomValue(0, 3))),
+                                camera.position.z + @as(f16, @floatFromInt(rain_y + rl.getRandomValue(0, 2))),
+                            ),
+                            0.01,
+                            0.2,
+                            0.01,
+                            rl.Color.blue,
+                        );
+                    }
+                }
+                // Update rain music
+                rl.updateMusicStream(rainMusic);
+            }
+
+            var x: f32 = -4;
+            while (x < 4) : (x += 1) {
+                var z: f32 = -1;
+                while (z < 100) : (z += 1) {
+                    rl.drawModel(tree, rl.Vector3.init(x * 40, 12, z * 40), 0.3, rl.Color.brown);
                 }
             }
 
-            // Draw ground
-            rl.drawCube(rl.Vector3.init(-9, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
-            rl.drawCube(rl.Vector3.init(-19, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
+            var i: f32 = 0;
+            while (i < 500) : (i += 1) {
+                rl.drawModel(track, rl.Vector3.init(20, 1.5, i * 17), 0.15, rl.Color.dark_gray);
+                rl.drawModel(track, rl.Vector3.init(10, 1.5, i * 17), 0.15, rl.Color.dark_gray);
+            }
+            rl.drawModel(train_station, rl.Vector3.init(35, 3.4, -9), 0.3, rl.Color.gray);
+            rl.drawModel(train_station, rl.Vector3.init(35, 3.4, 1990), 0.3, rl.Color.gray);
+            rl.drawCube(rl.Vector3.init(11, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
+            rl.drawCube(rl.Vector3.init(20.8, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
             rl.drawCube(rl.Vector3.init(0.0, 0, 0.0), 500, 0.01, 7000, rl.Color.dark_brown);
-
-            // Draw a blue wall for understansing where you are going.
-            rl.drawCube(rl.Vector3.init(16.0, -0.4, 0.0), 1.0, 10, 50.0, rl.Color.dark_blue);
         }
+
         // Text instructions screen
         {
             if (rules.show_instructions) {
@@ -200,63 +209,61 @@ pub fn main() void {
                     rules.show_instructions = true;
                 }
             }
-            if (rl.isKeyDown(rl.KeyboardKey.key_w) and speed > 5) {
-                rl.drawText("Max Speed", screenWidth / 2 - 100, screenHeight / 2 - 100, 20, rl.Color.red);
+            std.debug.print("{}\n", .{@as(i32, @intFromFloat(camera.position.z))});
+            if (rl.isKeyDown(rl.KeyboardKey.key_w) and speed > 5.1) {
+                rl.drawText("Max Speed", constants.screenWidth / 2 - 100, constants.screenHeight / 2 - 100, 20, rl.Color.red);
             }
-            if (camera.position.z < -12 and camera.position.z > -20) {
-                rules.crossed_the_station = true;
+            if (camera.position.z > 1967 or camera.position.z < 7) {
+                rules.within_station_boundary = true;
             } else {
-                rules.crossed_the_station = false;
+                rules.within_station_boundary = false;
             }
-            if (rules.iteration == 4) {
-                rules.iteration = 0;
+            if (rules.iteration != 0 and @rem(rules.iteration, 2) == 0) {
+                rules.stop_at_next_station = true;
             }
-            if (rules.iteration != 0 and @rem(rules.iteration, 2) == 0 and rules.crossed_the_station) {
-                rules.stop_at_next_station = true; // after 1 station
-                rules.crossed_the_station = false;
-            }
-            if (rules.stop_at_next_station and camera.position.z > -1980 and speed <= 0) {
+            if (rules.stop_at_next_station and rules.within_station_boundary and speed <= 0) {
                 rules.stop_at_next_station = false; // after 1 station
                 rules.iteration = 0;
                 // WIN
             }
-            if (rl.isKeyDown(rl.KeyboardKey.key_h) and camera.position.z > -1980 and !rules.honked) {
+            if (rules.stop_at_next_station and camera.position.z > 1990 and speed != 0) {
+                rules.failed = true;
+            }
+            if (rl.isKeyDown(rl.KeyboardKey.key_h) and rules.within_station_boundary and !rules.honked) {
                 rules.honked = true;
                 rules.score += 100;
             }
-            if (rules.stop_at_next_station and rules.crossed_the_station) {
-                rules.failed = true;
-            }
-            if (rules.crossed_the_station) {
+            
+            if (!rules.within_station_boundary) {
                 rules.honked = false;
             }
             if (rules.failed) {
-                rl.drawRectangle(0, 0, screenWidth, screenHeight, rl.Color.dark_gray.fade(0.5));
+                rl.drawRectangle(0, 0, constants.screenWidth, constants.screenHeight, rl.Color.dark_gray.fade(0.5));
                 rl.drawRectangleLines(10, 10, 250, 70, rl.Color.dark_gray);
-                rl.drawText("Failed", screenWidth / 2 - 150, screenHeight / 2 - 100, 200, rl.Color.red);
+                rl.drawText("Failed", constants.screenWidth / 2 - 150, constants.screenHeight / 2 - 100, 200, rl.Color.red);
             }
             if (rules.stop_at_next_station) {
-                rl.drawText("Stop at next station", screenWidth / 2 - 50, screenHeight / 2 - 50, 50, rl.Color.red);
+                rl.drawText("Stop at next station", constants.screenWidth / 2 - 50, constants.screenHeight / 2 - 50, 50, rl.Color.red);
             }
             {
                 const fmt = "Your score: {d}";
                 const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
                 var buf: [len:0]u8 = undefined;
                 const text = std.fmt.bufPrintZ(&buf, fmt, .{rules.score}) catch unreachable;
-                rl.drawText(text, screenWidth - 220, 10, 20, rl.Color.black);
+                rl.drawText(text, constants.screenWidth - 220, 10, 20, rl.Color.black);
             }
             {
                 const fmt = "Your speed: {d} M/h";
                 const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
                 var buf: [len:0]u8 = undefined;
                 const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(speed * 2 * 10))}) catch unreachable;
-                rl.drawText(text, screenWidth - 220, 30, 20, rl.Color.black);
+                rl.drawText(text, constants.screenWidth - 220, 30, 20, rl.Color.black);
             }
 
-            if (camera.position.z > 0) {
-                camera.position.z = -0.1;
+            if (camera.position.z < 0) {
+                camera.position.z = 0.1;
                 speed = 0;
-                rl.drawText("Wrong Direction", screenWidth / 2 - 100, screenHeight / 2 - 100, 20, rl.Color.red);
+                rl.drawText("Wrong Direction", constants.screenWidth / 2 - 100, constants.screenHeight / 2 - 100, 20, rl.Color.red);
             }
         }
     }
