@@ -48,8 +48,10 @@ pub fn main() void {
     };
 
     // -------------- Load and Store 3D Models ------------------
-    const train = rl.loadModel("./assets/train.glb");
-    defer rl.unloadModel(train);
+    const red_signal = rl.loadModel("./assets/red_signal.glb");
+    defer rl.unloadModel(red_signal);
+    const green_signal = rl.loadModel("./assets/green_signal.glb");
+    defer rl.unloadModel(green_signal);
     const terrain = rl.loadModel("./assets/terrain.glb");
     defer rl.unloadModel(terrain);
     const tree = rl.loadModel("./assets/tree.glb");
@@ -99,12 +101,6 @@ pub fn main() void {
             defer camera.end();
             rl.beginMode3D(camera);
             defer rl.endMode3D();
-            rl.drawModel(
-                train,
-                rl.Vector3.init(camera.position.x + 4, 3.5, camera.position.z - 4),
-                0.1,
-                rl.Color.red,
-            );
 
             // Camera's position should increase due to speed.
 
@@ -188,11 +184,11 @@ pub fn main() void {
                 }
             }
             {
-                var z:f32 = 0;
-                    while (z < 40) : (z += 1) {
-                        rl.drawModel(mountains, rl.Vector3.init(-300, 30, z * 200), 2, rl.Color.light_gray);
-                        rl.drawModel(mountains, rl.Vector3.init(150, 30, z * 200), 2, rl.Color.light_gray);
-                    }
+                var z: f32 = 0;
+                while (z < 40) : (z += 1) {
+                    rl.drawModel(mountains, rl.Vector3.init(-300, 30, z * 200), 2, rl.Color.light_gray);
+                    rl.drawModel(mountains, rl.Vector3.init(150, 30, z * 200), 2, rl.Color.light_gray);
+                }
             }
 
             var i: f32 = 0;
@@ -201,21 +197,28 @@ pub fn main() void {
                 rl.drawModel(track, rl.Vector3.init(10, 1.5, i * 17), 0.15, rl.Color.dark_gray);
             }
             {
-                var z:f32 = 1;
+                var z: f32 = 1;
                 // rl.drawModel(electricity, rl.Vector3.init(30, 2,  200), 0.1, rl.Color.gray);
                 while (z < 50) : (z += 1) {
-                    rl.drawModel(electricity, rl.Vector3.init(23.5, 6, z * 60), 0.1, rl.Color.gray);
+                    rl.drawModel(electricity, rl.Vector3.init(23.5, 6, z * 50), 0.1, rl.Color.gray);
                 }
             }
             {
-                var z:f32 = 1;
-                rl.drawModel(sign, rl.Vector3.init(30, 2,  200), 0.1, rl.Color.gray);
+                var z: f32 = 1;
+                rl.drawModel(sign, rl.Vector3.init(30, 2, 200), 0.1, rl.Color.gray);
                 while (z < 8) : (z += 1) {
                     rl.drawModel(sign, rl.Vector3.init(30, 2, z * 550), 0.1, rl.Color.gray);
                 }
             }
             rl.drawModel(train_station, rl.Vector3.init(35, 3.4, -9), 0.3, rl.Color.gray);
             rl.drawModel(train_station, rl.Vector3.init(35, 3.4, 1990), 0.3, rl.Color.gray);
+            if (rules.stop_at_next_station) {
+                rl.drawModel(red_signal, rl.Vector3.init(28, 2.4, 2040), 0.1, rl.Color.gray);
+                rl.drawModel(red_signal, rl.Vector3.init(28, 2.4, 40), 0.1, rl.Color.gray);
+            } else {
+                rl.drawModel(green_signal, rl.Vector3.init(28, 2.4, 2040), 0.1, rl.Color.gray);
+                rl.drawModel(green_signal, rl.Vector3.init(28, 2.4, 40), 0.1, rl.Color.gray);
+            }
             rl.drawCube(rl.Vector3.init(11, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
             rl.drawModel(track_bent_r, rl.Vector3.init(15.7, 1.5, 50), 0.15, rl.Color.dark_gray);
             rl.drawModel(track_bent, rl.Vector3.init(15.7, 1.5, 1720), 0.15, rl.Color.dark_gray);
@@ -292,11 +295,11 @@ pub fn main() void {
                 const fmt = "Next station: {d} m";
                 const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
                 var buf: [len:0]u8 = undefined;
-                const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(2000-camera.position.z))}) catch unreachable;
+                const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(2000 - camera.position.z))}) catch unreachable;
                 rl.drawText(text, constants.screenWidth - 220, 50, 20, rl.Color.black);
             }
             {
-                if(rules.stop_at_next_station){
+                if (rules.stop_at_next_station) {
                     rl.drawText("Status: Stop at", constants.screenWidth - 220, 70, 20, rl.Color.red);
                     rl.drawText("          next station", constants.screenWidth - 220, 90, 20, rl.Color.red);
                     rl.drawText("Stop at Next station", constants.screenWidth - 500, 300, 25, rl.Color.red);
