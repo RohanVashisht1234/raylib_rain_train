@@ -1,6 +1,6 @@
 # Train simulator in Zig raylib
 
-<video poster="https://github.com/RohanVashisht1234/raylib_rain_train/blob/main/assets/example.png?raw=true" controls src="https://github.com/RohanVashisht1234/raylib_rain_train/raw/main/assets/example.mov"></video>
+![Train simulator image](https://github.com/RohanVashisht1234/raylib_rain_train/blob/main/assets/example.png?raw=true)
 
 Simple clone the repo and build it.
 
