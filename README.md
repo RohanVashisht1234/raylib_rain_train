@@ -1,5 +1,7 @@
 # Train simulator in Zig raylib
 
+![Simulator demo video](./assets/example.mov)
+
 Simple clone the repo and build it.
 
 or run these commands:
