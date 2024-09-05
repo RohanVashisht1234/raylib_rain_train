@@ -46,6 +46,13 @@ pub fn main() void {
         .fovy = 60.0,
         .projection = rl.CameraProjection.camera_perspective,
     };
+    var camera2 = rl.Camera3D{
+        .position = rl.Vector3.init(5, 20, camera.position.z),
+        .target = rl.Vector3.init(camera.position.x, camera.position.y, camera.position.z + 10),
+        .up = rl.Vector3.init(0, 1, 0),
+        .fovy = 60.0,
+        .projection = rl.CameraProjection.camera_perspective,
+    };
 
     // -------------- Load and Store 3D Models ------------------
     const red_signal = rl.loadModel("./assets/red_signal.glb");
@@ -58,27 +65,36 @@ pub fn main() void {
     defer rl.unloadModel(tree);
     const track = rl.loadModel("./assets/track.glb");
     defer rl.unloadModel(track);
+    const train = rl.loadModel("./assets/train.glb");
+    defer rl.unloadModel(train);
     const train_station = rl.loadModel("./assets/train_station.glb");
     defer rl.unloadModel(train_station);
     const sign = rl.loadModel("./assets/sign.glb");
     defer rl.unloadModel(train_station);
     const electricity = rl.loadModel("./assets/electricity.glb");
     defer rl.unloadModel(electricity);
+    const electricity_r = rl.loadModel("./assets/electricity_r.glb");
+    defer rl.unloadModel(electricity_r);
     const track_bent = rl.loadModel("./assets/track_bent.glb");
     defer rl.unloadModel(track_bent);
     const track_bent_r = rl.loadModel("./assets/track_bent_r.glb");
     defer rl.unloadModel(track_bent_r);
     const mountains = rl.loadModel("./assets/mountains.glb");
     defer rl.unloadModel(mountains);
+    var dummy_train = rl.Vector3.init(9.7, 1.5, 200);
+    var protagonist_train = rl.Vector3.init(20, 1.5, 10);
 
     // -------- Important mutable variables -------------
     var speed: f32 = 0;
+    var which_camera:i32 = 0;
     var raindropAvgHeight: i32 = 5;
 
     // =-=-=-=-= Game Loop =-=-=-=-=-=
     while (!rl.windowShouldClose()) {
         // Normal updates
         {
+            // camera.update(rl.CameraMode.camera_custom);
+            camera2.update(rl.CameraMode.camera_custom);
             camera.update(rl.CameraMode.camera_custom);
             rl.beginDrawing();
             defer rl.endDrawing();
@@ -97,10 +113,18 @@ pub fn main() void {
         // Draw actual game
         {
             // Camera config
+            camera2.begin();
+            defer camera2.end();
             camera.begin();
-            defer camera.end();
-            rl.beginMode3D(camera);
+            defer camera2.end();
+            if(which_camera == 0){
+                rl.beginMode3D(camera2);
+            } else {
+                rl.beginMode3D(camera);
+            }
             defer rl.endMode3D();
+            camera2.position.z = camera.position.z + 50;
+            camera2.target = camera.position;
 
             // Camera's position should increase due to speed.
 
@@ -118,6 +142,13 @@ pub fn main() void {
             // Play horn
             if (rl.isKeyDown(rl.KeyboardKey.key_h)) {
                 rl.updateMusicStream(horn);
+            }
+            if(rl.isKeyPressed(rl.KeyboardKey.key_c)){
+                if(which_camera == 0){
+                    which_camera = 1;
+                } else {
+                    which_camera = 0;
+                }
             }
 
             // reset playing horn
@@ -176,31 +207,47 @@ pub fn main() void {
                 // Update rain music
                 rl.updateMusicStream(rainMusic);
             }
-            var x: f32 = -4;
+            var x: f32 = -5;
             while (x < 4) : (x += 1) {
-                var z: f32 = -1;
+                var z: f32 = -20;
+                if(x == 0 or x == 1){
+                    continue;
+                }
                 while (z < 100) : (z += 1) {
-                    rl.drawModel(tree, rl.Vector3.init(x * 40, 12, z * 40), 0.3, rl.Color.brown);
+                    rl.drawModel(tree, rl.Vector3.init(x * 20, 12, z * 40), 0.3, rl.Color.brown);
                 }
             }
             {
-                var z: f32 = 0;
+                var z: f32 = -30;
                 while (z < 40) : (z += 1) {
                     rl.drawModel(mountains, rl.Vector3.init(-300, 30, z * 200), 2, rl.Color.light_gray);
                     rl.drawModel(mountains, rl.Vector3.init(150, 30, z * 200), 2, rl.Color.light_gray);
                 }
             }
 
-            var i: f32 = 0;
+            var i: f32 = -50;
             while (i < 500) : (i += 1) {
                 rl.drawModel(track, rl.Vector3.init(20, 1.5, i * 17), 0.15, rl.Color.dark_gray);
                 rl.drawModel(track, rl.Vector3.init(10, 1.5, i * 17), 0.15, rl.Color.dark_gray);
             }
+            protagonist_train.x = camera.position.x;
+            protagonist_train.z = camera.position.z - 30;
+            rl.drawModel(train, dummy_train, 0.052, rl.Color.gray);
+            rl.drawModel(train, protagonist_train, 0.052, rl.Color.gray);
+            if(dummy_train.z < 1) {
+                dummy_train.z = 2000;
+            }
+            dummy_train.z -= 0.5;
             {
-                var z: f32 = 1;
+                var z: f32 = -20;
                 // rl.drawModel(electricity, rl.Vector3.init(30, 2,  200), 0.1, rl.Color.gray);
                 while (z < 50) : (z += 1) {
                     rl.drawModel(electricity, rl.Vector3.init(23.5, 6, z * 50), 0.1, rl.Color.gray);
+                }
+                z =  -20;
+
+                while (z < 50) : (z += 1) {
+                    rl.drawModel(electricity_r, rl.Vector3.init(8, 4.5, z * 54), 0.1, rl.Color.gray);
                 }
             }
             {
@@ -224,7 +271,8 @@ pub fn main() void {
             rl.drawModel(track_bent, rl.Vector3.init(15.7, 1.5, 1720), 0.15, rl.Color.dark_gray);
             rl.drawCube(rl.Vector3.init(20.8, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
             rl.drawCube(rl.Vector3.init(21, 8, 0.0), 0.1, 0.1, 7000, rl.Color.black);
-            rl.drawCube(rl.Vector3.init(0.0, 0, 0.0), 500, 0.01, 7000, rl.Color.dark_brown);
+            rl.drawCube(rl.Vector3.init(10.5, 8, 0.0), 0.1, 0.1, 7000, rl.Color.black);
+            rl.drawCube(rl.Vector3.init(0.0, 0, 0.0), 500, -1, 7000, rl.Color.dark_brown);
         }
         // Text instructions screen
         {
@@ -234,8 +282,9 @@ pub fn main() void {
                 rl.drawText("Train controls:", 20, 20, 10, rl.Color.black);
                 rl.drawText("- Go forward: W, Go back : S", 40, 40, 10, rl.Color.dark_gray);
                 rl.drawText("- Press H to Honk, Press B for breaks", 40, 60, 10, rl.Color.dark_gray);
-                rl.drawText("- Honk at stations to increase score", 40, 80, 10, rl.Color.dark_gray);
-                rl.drawText("- Press I to hide these instructions", 40, 100, 10, rl.Color.dark_gray);
+                rl.drawText("- Press C to change camera View", 40, 80, 10, rl.Color.dark_gray);
+                rl.drawText("- Honk at stations to increase score", 40, 100, 10, rl.Color.dark_gray);
+                rl.drawText("- Press I to hide these instructions", 40, 120, 10, rl.Color.dark_gray);
             }
             if (rl.isKeyPressed(rl.KeyboardKey.key_i)) {
                 if (rules.show_instructions) {
