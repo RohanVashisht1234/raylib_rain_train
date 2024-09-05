@@ -277,8 +277,8 @@ pub fn main() void {
         // Text instructions screen
         {
             if (rules.show_instructions) {
-                rl.drawRectangle(10, 10, 250, 110, rl.Color.sky_blue.fade(0.5));
-                rl.drawRectangleLines(10, 10, 250, 110, rl.Color.blue);
+                rl.drawRectangle(10, 10, 250, 130, rl.Color.sky_blue.fade(0.5));
+                rl.drawRectangleLines(10, 10, 250, 130, rl.Color.blue);
                 rl.drawText("Train controls:", 20, 20, 10, rl.Color.black);
                 rl.drawText("- Go forward: W, Go back : S", 40, 40, 10, rl.Color.dark_gray);
                 rl.drawText("- Press H to Honk, Press B for breaks", 40, 60, 10, rl.Color.dark_gray);
