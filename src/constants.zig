@@ -1,5 +1,5 @@
-pub const screenWidth: u11 = 1080;
-pub const screenHeight: u11 = 720;
+pub const screenWidth: u11 = 1920;
+pub const screenHeight: u11 = 1080;
 
 // Define the rules of the game
 pub const _rules = struct {
