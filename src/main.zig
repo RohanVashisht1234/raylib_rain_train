@@ -39,58 +39,65 @@ pub fn main() void {
     rl.setTargetFPS(60);
 
     // -------------------- Create First person Camera ------------------------
-    var camera = rl.Camera3D{
-        .position = rl.Vector3.init(20, 4, 4),
-        .target = rl.Vector3.init(20, -1.8, 10000000),
-        .up = rl.Vector3.init(0, 1, 0),
-        .fovy = 60.0,
-        .projection = rl.CameraProjection.camera_perspective,
-    };
-    var camera2 = rl.Camera3D{
-        .position = rl.Vector3.init(5, 20, camera.position.z),
-        .target = rl.Vector3.init(camera.position.x, camera.position.y, camera.position.z + 10),
-        .up = rl.Vector3.init(0, 1, 0),
-        .fovy = 60.0,
-        .projection = rl.CameraProjection.camera_perspective,
+
+    var cameras = constants.cameras_config{
+        .current_camera = 0,
+        .front_camera = rl.Camera3D{
+            .position = rl.Vector3.init(20, 4, 4),
+            .target = rl.Vector3.init(20, -1.8, 10000000),
+            .up = rl.Vector3.init(0, 1, 0),
+            .fovy = 60.0,
+            .projection = rl.CameraProjection.camera_perspective,
+        },
+        .top_view_camera = rl.Camera3D{
+            .position = rl.Vector3.init(5, 20, 4),
+            .target = rl.Vector3.init(20, 4, 14),
+            .up = rl.Vector3.init(0, 1, 0),
+            .fovy = 60.0,
+            .projection = rl.CameraProjection.camera_perspective,
+        },
     };
 
     // -------------- Load and Store 3D Models ------------------
-    const red_signal = rl.loadModel("./assets/red_signal.glb");
-    defer rl.unloadModel(red_signal);
-    const green_signal = rl.loadModel("./assets/green_signal.glb");
-    defer rl.unloadModel(green_signal);
-    const terrain = rl.loadModel("./assets/terrain.glb");
-    defer rl.unloadModel(terrain);
-    const tree = rl.loadModel("./assets/tree.glb");
-    defer rl.unloadModel(tree);
-    const track = rl.loadModel("./assets/track.glb");
-    defer rl.unloadModel(track);
-    const train = rl.loadModel("./assets/train.glb");
-    defer rl.unloadModel(train);
-    const train_station = rl.loadModel("./assets/train_station.glb");
-    defer rl.unloadModel(train_station);
-    const sign = rl.loadModel("./assets/sign.glb");
-    defer rl.unloadModel(train_station);
-    const electricity = rl.loadModel("./assets/electricity.glb");
-    defer rl.unloadModel(electricity);
-    const electricity_r = rl.loadModel("./assets/electricity_r.glb");
-    defer rl.unloadModel(electricity_r);
-    const track_bent = rl.loadModel("./assets/track_bent.glb");
-    defer rl.unloadModel(track_bent);
-    const track_bottom = rl.loadModel("./assets/track_bottom.glb");
-    defer rl.unloadModel(track_bottom);
-    const track_bent_r = rl.loadModel("./assets/track_bent_r.glb");
-    defer rl.unloadModel(track_bent_r);
-    const mountains = rl.loadModel("./assets/mountains.glb");
-    defer rl.unloadModel(mountains);
-    const scene = rl.loadModel("./assets/scene.glb");
-    defer rl.unloadModel(scene);
+    const models = constants.models_config{
+        .red_signal = rl.loadModel("./assets/red_signal.glb"),
+        .green_signal = rl.loadModel("./assets/green_signal.glb"),
+        .terrain = rl.loadModel("./assets/terrain.glb"),
+        .tree = rl.loadModel("./assets/tree.glb"),
+        .track = rl.loadModel("./assets/track.glb"),
+        .train = rl.loadModel("./assets/train.glb"),
+        .train_station = rl.loadModel("./assets/train_station.glb"),
+        .sign = rl.loadModel("./assets/sign.glb"),
+        .electricity = rl.loadModel("./assets/electricity.glb"),
+        .electricity_r = rl.loadModel("./assets/electricity_r.glb"),
+        .track_bent = rl.loadModel("./assets/track_bent.glb"),
+        .track_bottom = rl.loadModel("./assets/track_bottom.glb"),
+        .track_bent_r = rl.loadModel("./assets/track_bent_r.glb"),
+        .mountains = rl.loadModel("./assets/mountains.glb"),
+        .scene = rl.loadModel("./assets/scene.glb"),
+    };
+    defer {
+        rl.unloadModel(models.red_signal);
+        rl.unloadModel(models.green_signal);
+        rl.unloadModel(models.terrain);
+        rl.unloadModel(models.tree);
+        rl.unloadModel(models.track);
+        rl.unloadModel(models.train);
+        rl.unloadModel(models.train_station);
+        rl.unloadModel(models.sign);
+        rl.unloadModel(models.electricity);
+        rl.unloadModel(models.electricity_r);
+        rl.unloadModel(models.track_bent);
+        rl.unloadModel(models.track_bottom);
+        rl.unloadModel(models.track_bent_r);
+        rl.unloadModel(models.mountains);
+        rl.unloadModel(models.scene);
+    }
     var dummy_train = rl.Vector3.init(9.7, 1.5, 200);
     var protagonist_train = rl.Vector3.init(20, 1.5, 10);
 
     // -------- Important mutable variables -------------
     var speed: f32 = 0;
-    var which_camera: i32 = 0;
     var raindropAvgHeight: i32 = 5;
 
     // =-=-=-=-= Game Loop =-=-=-=-=-=
@@ -98,8 +105,8 @@ pub fn main() void {
         // Normal updates
         {
             // camera.update(rl.CameraMode.camera_custom);
-            camera2.update(rl.CameraMode.camera_custom);
-            camera.update(rl.CameraMode.camera_custom);
+            cameras.top_view_camera.update(rl.CameraMode.camera_custom);
+            cameras.front_camera.update(rl.CameraMode.camera_custom);
             rl.beginDrawing();
             defer rl.endDrawing();
         }
@@ -117,22 +124,22 @@ pub fn main() void {
         // Draw actual game
         {
             // Camera config
-            camera2.begin();
-            defer camera2.end();
-            camera.begin();
-            defer camera2.end();
-            if (which_camera == 0) {
-                rl.beginMode3D(camera2);
+            cameras.top_view_camera.begin();
+            defer cameras.top_view_camera.end();
+            cameras.front_camera.begin();
+            defer cameras.top_view_camera.end();
+            if (cameras.current_camera == 0) {
+                rl.beginMode3D(cameras.top_view_camera);
             } else {
-                rl.beginMode3D(camera);
+                rl.beginMode3D(cameras.front_camera);
             }
             defer rl.endMode3D();
-            camera2.position.z = camera.position.z + 50;
-            camera2.target = camera.position;
+            cameras.top_view_camera.position.z = cameras.front_camera.position.z + 50;
+            cameras.top_view_camera.target = cameras.front_camera.position;
 
             // Camera's position should increase due to speed.
 
-            camera.position.z += speed;
+            cameras.front_camera.position.z += speed;
 
             if (speed > 0) {
                 speed -= 0.001;
@@ -148,10 +155,10 @@ pub fn main() void {
                 rl.updateMusicStream(horn);
             }
             if (rl.isKeyPressed(rl.KeyboardKey.key_c)) {
-                if (which_camera == 0) {
-                    which_camera = 1;
+                if (cameras.current_camera == 0) {
+                    cameras.current_camera = 1;
                 } else {
-                    which_camera = 0;
+                    cameras.current_camera = 0;
                 }
             }
 
@@ -178,8 +185,8 @@ pub fn main() void {
             // std.debug.print("{}\n", .{camera.position.z});
 
             // bring train back to 0
-            if (camera.position.z > 2000) {
-                camera.position.z = 0;
+            if (cameras.front_camera.position.z > 2000) {
+                cameras.front_camera.position.z = 0;
                 rules.iteration += 1;
             }
 
@@ -197,9 +204,9 @@ pub fn main() void {
                     while (rain_y < 10) : (rain_y += 1) {
                         rl.drawCube(
                             rl.Vector3.init(
-                                camera.position.x + 0.5 + @as(f16, @floatFromInt(rain_x + rl.getRandomValue(1, 2))),
+                                cameras.front_camera.position.x + 0.5 + @as(f16, @floatFromInt(rain_x + rl.getRandomValue(1, 2))),
                                 @as(f16, @floatFromInt(raindropAvgHeight + rl.getRandomValue(0, 3))),
-                                camera.position.z + @as(f16, @floatFromInt(rain_y + rl.getRandomValue(0, 2))),
+                                cameras.front_camera.position.z + @as(f16, @floatFromInt(rain_y + rl.getRandomValue(0, 2))),
                             ),
                             0.01,
                             0.2,
@@ -218,26 +225,26 @@ pub fn main() void {
                     continue;
                 }
                 while (z < 100) : (z += 1) {
-                    rl.drawModel(tree, rl.Vector3.init(x * 20, 12, z * 40), 0.3, rl.Color.brown);
+                    rl.drawModel(models.tree, rl.Vector3.init(x * 20, 12, z * 40), 0.3, rl.Color.brown);
                 }
             }
             {
                 var z: f32 = -30;
                 while (z < 40) : (z += 1) {
-                    rl.drawModel(mountains, rl.Vector3.init(-300, 30, z * 200), 2, rl.Color.brown);
-                    rl.drawModel(mountains, rl.Vector3.init(150, 30, z * 200), 2, rl.Color.brown);
+                    rl.drawModel(models.mountains, rl.Vector3.init(-300, 30, z * 200), 2, rl.Color.brown);
+                    rl.drawModel(models.mountains, rl.Vector3.init(150, 30, z * 200), 2, rl.Color.brown);
                 }
             }
 
             var i: f32 = -50;
             while (i < 500) : (i += 1) {
-                rl.drawModel(track, rl.Vector3.init(20, 1.5, i * 17), 0.15, rl.Color.dark_gray);
-                rl.drawModel(track, rl.Vector3.init(10, 1.5, i * 17), 0.15, rl.Color.dark_gray);
+                rl.drawModel(models.track, rl.Vector3.init(20, 1.5, i * 17), 0.15, rl.Color.dark_gray);
+                rl.drawModel(models.track, rl.Vector3.init(10, 1.5, i * 17), 0.15, rl.Color.dark_gray);
             }
-            protagonist_train.x = camera.position.x;
-            protagonist_train.z = camera.position.z - 30;
-            rl.drawModel(train, dummy_train, 0.052, rl.Color.gray);
-            rl.drawModel(train, protagonist_train, 0.052, rl.Color.gray);
+            protagonist_train.x = cameras.front_camera.position.x;
+            protagonist_train.z = cameras.front_camera.position.z - 30;
+            rl.drawModel(models.train, dummy_train, 0.052, rl.Color.gray);
+            rl.drawModel(models.train, protagonist_train, 0.052, rl.Color.gray);
             if (dummy_train.z < 1) {
                 dummy_train.z = 2000;
             }
@@ -246,45 +253,45 @@ pub fn main() void {
                 var z: f32 = -20;
                 // rl.drawModel(electricity, rl.Vector3.init(30, 2,  200), 0.1, rl.Color.gray);
                 while (z < 50) : (z += 1) {
-                    rl.drawModel(electricity, rl.Vector3.init(23.5, 6, z * 50), 0.1, rl.Color.gray);
+                    rl.drawModel(models.electricity, rl.Vector3.init(23.5, 6, z * 50), 0.1, rl.Color.gray);
                 }
                 z = -20;
 
                 while (z < 50) : (z += 1) {
-                    rl.drawModel(electricity_r, rl.Vector3.init(8, 4.5, z * 54), 0.1, rl.Color.gray);
+                    rl.drawModel(models.electricity_r, rl.Vector3.init(8, 4.5, z * 54), 0.1, rl.Color.gray);
                 }
             }
             {
                 var z: f32 = 1;
-                rl.drawModel(sign, rl.Vector3.init(30, 2, 200), 0.1, rl.Color.gray);
+                rl.drawModel(models.sign, rl.Vector3.init(30, 2, 200), 0.1, rl.Color.gray);
                 while (z < 8) : (z += 1) {
-                    rl.drawModel(sign, rl.Vector3.init(30, 2, z * 550), 0.1, rl.Color.gray);
+                    rl.drawModel(models.sign, rl.Vector3.init(30, 2, z * 550), 0.1, rl.Color.gray);
                 }
             }
-            rl.drawModel(train_station, rl.Vector3.init(35, 3.4, -9), 0.3, rl.Color.gray);
-            rl.drawModel(train_station, rl.Vector3.init(35, 3.4, 1990), 0.3, rl.Color.gray);
+            rl.drawModel(models.train_station, rl.Vector3.init(35, 3.4, -9), 0.3, rl.Color.gray);
+            rl.drawModel(models.train_station, rl.Vector3.init(35, 3.4, 1990), 0.3, rl.Color.gray);
             if (rules.stop_at_next_station) {
-                rl.drawModel(red_signal, rl.Vector3.init(28, 2.4, 2040), 0.1, rl.Color.gray);
-                rl.drawModel(red_signal, rl.Vector3.init(28, 2.4, 40), 0.1, rl.Color.gray);
+                rl.drawModel(models.red_signal, rl.Vector3.init(28, 2.4, 2040), 0.1, rl.Color.gray);
+                rl.drawModel(models.red_signal, rl.Vector3.init(28, 2.4, 40), 0.1, rl.Color.gray);
             } else {
-                rl.drawModel(green_signal, rl.Vector3.init(28, 2.4, 2040), 0.1, rl.Color.gray);
-                rl.drawModel(green_signal, rl.Vector3.init(28, 2.4, 40), 0.1, rl.Color.gray);
+                rl.drawModel(models.green_signal, rl.Vector3.init(28, 2.4, 2040), 0.1, rl.Color.gray);
+                rl.drawModel(models.green_signal, rl.Vector3.init(28, 2.4, 40), 0.1, rl.Color.gray);
             }
             // rl.drawCube(rl.Vector3.init(11, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
             {
                 var fortrack: f32 = -20;
                 while (fortrack < 500) : (fortrack += 1) {
-                    rl.drawModel(track_bottom, rl.Vector3.init(20.7, 0.4, fortrack * 5), 0.3, rl.Color.dark_gray);
+                    rl.drawModel(models.track_bottom, rl.Vector3.init(20.7, 0.4, fortrack * 5), 0.3, rl.Color.dark_gray);
                 }
             }
             {
                 var fortrack: f32 = -20;
                 while (fortrack < 500) : (fortrack += 1) {
-                    rl.drawModel(track_bottom, rl.Vector3.init(10.7, 0.4, fortrack * 5), 0.3, rl.Color.dark_gray);
+                    rl.drawModel(models.track_bottom, rl.Vector3.init(10.7, 0.4, fortrack * 5), 0.3, rl.Color.dark_gray);
                 }
             }
-            rl.drawModel(track_bent_r, rl.Vector3.init(15.7, 1.5, 50), 0.15, rl.Color.dark_gray);
-            rl.drawModel(track_bent, rl.Vector3.init(15.7, 1.5, 1720), 0.15, rl.Color.dark_gray);
+            rl.drawModel(models.track_bent_r, rl.Vector3.init(15.7, 1.5, 50), 0.15, rl.Color.dark_gray);
+            rl.drawModel(models.track_bent, rl.Vector3.init(15.7, 1.5, 1720), 0.15, rl.Color.dark_gray);
             // rl.drawCube(rl.Vector3.init(20.8, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
             rl.drawCube(rl.Vector3.init(21, 8, 0.0), 0.1, 0.1, 7000, rl.Color.black);
             rl.drawCube(rl.Vector3.init(10.5, 8, 0.0), 0.1, 0.1, 7000, rl.Color.black);
@@ -293,7 +300,7 @@ pub fn main() void {
                 while (forScene < 500) : (forScene += 1) {
                     var forScenex: f32 = -40;
                     while (forScenex < 100) : (forScenex += 20) {
-                        rl.drawModel(scene, rl.Vector3.init(forScenex, 0.1, @as(f32, @floatCast(forScene * 20))), 1, rl.Color.gray);
+                        rl.drawModel(models.scene, rl.Vector3.init(forScenex, 0.1, @as(f32, @floatCast(forScene * 20))), 1, rl.Color.gray);
                         // rl.drawModel(scene, rl.Vector3.init(20, -0.5, @as(f32, @floatCast(forScene * 20))), 1, rl.Color.light_gray);
                     }
                 }
@@ -322,7 +329,7 @@ pub fn main() void {
             if (rl.isKeyDown(rl.KeyboardKey.key_w) and speed > 5.1) {
                 rl.drawText("Max Speed", constants.screenWidth / 2 - 100, constants.screenHeight / 2 - 100, 20, rl.Color.red);
             }
-            if (camera.position.z > 1967 or camera.position.z < 7) {
+            if (cameras.front_camera.position.z > 1967 or cameras.front_camera.position.z < 7) {
                 rules.within_station_boundary = true;
             } else {
                 rules.within_station_boundary = false;
@@ -335,7 +342,7 @@ pub fn main() void {
                 rules.iteration = 0;
                 // WIN
             }
-            if (rules.stop_at_next_station and camera.position.z > 1990 and speed != 0) {
+            if (rules.stop_at_next_station and cameras.front_camera.position.z > 1990 and speed != 0) {
                 rules.failed = true;
             }
             if (rl.isKeyDown(rl.KeyboardKey.key_h) and rules.within_station_boundary and !rules.honked) {
@@ -369,7 +376,7 @@ pub fn main() void {
                 const fmt = "Next station: {d} m";
                 const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
                 var buf: [len:0]u8 = undefined;
-                const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(2000 - camera.position.z))}) catch unreachable;
+                const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(2000 - cameras.front_camera.position.z))}) catch unreachable;
                 rl.drawText(text, constants.screenWidth - 220, 50, 20, rl.Color.black);
             }
             {
@@ -382,13 +389,11 @@ pub fn main() void {
                 }
             }
 
-            if (camera.position.z < 0) {
-                camera.position.z = 0.1;
+            if (cameras.front_camera.position.z < 0) {
+                cameras.front_camera.position.z = 0.1;
                 speed = 0;
                 rl.drawText("Wrong Direction", constants.screenWidth / 2 - 100, constants.screenHeight / 2 - 100, 20, rl.Color.red);
             }
         }
     }
 }
-
-
