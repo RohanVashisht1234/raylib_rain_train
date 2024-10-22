@@ -17,21 +17,22 @@ pub fn main() void {
     // ------------------ Initialize Audio ---------------------
     rl.initAudioDevice();
 
-    const rainMusic = rl.loadMusicStream("./music/rn.mp3");
-    rl.playMusicStream(rainMusic);
-    defer rl.unloadMusicStream(rainMusic);
-
-    const lightning = rl.loadSound("./music/lightning.mp3");
-    defer rl.unloadSound(lightning);
-
-    const trainMusic = rl.loadMusicStream("./music/train.mp3");
-    rl.playMusicStream(trainMusic);
-    rl.setMusicVolume(trainMusic, 2);
-    defer rl.unloadMusicStream(trainMusic);
-
-    const horn: rl.Music = rl.loadMusicStream("./music/horn.mp3");
-    rl.playMusicStream(horn);
-    defer rl.unloadMusicStream(horn);
+    const audios = constants.audios_config{
+        .rainMusic = rl.loadMusicStream("./music/rn.mp3"),
+        .lightning = rl.loadSound("./music/lightning.mp3"),
+        .trainMusic = rl.loadMusicStream("./music/train.mp3"),
+        .horn = rl.loadMusicStream("./music/horn.mp3"),
+    };
+    rl.playMusicStream(audios.rainMusic);
+    rl.playMusicStream(audios.trainMusic);
+    rl.setMusicVolume(audios.trainMusic, 2);
+    rl.playMusicStream(audios.horn);
+    defer {
+        rl.unloadMusicStream(audios.horn);
+        rl.unloadMusicStream(audios.rainMusic);
+        rl.unloadMusicStream(audios.trainMusic);
+        rl.unloadSound(audios.lightning);
+    }
 
     // ----------- Initialize Window -------------
     rl.initWindow(constants.screenWidth, constants.screenHeight, "3d camera first person rain");
@@ -97,7 +98,7 @@ pub fn main() void {
     var protagonist_train = rl.Vector3.init(20, 1.5, 10);
 
     // -------- Important mutable variables -------------
-    var speed: f32 = 0;
+    var train_speed: f32 = 0;
     var raindropAvgHeight: i32 = 5;
 
     // =-=-=-=-= Game Loop =-=-=-=-=-=
@@ -115,7 +116,7 @@ pub fn main() void {
         {
             if (rl.getRandomValue(0, 600) == 30) {
                 rl.clearBackground(rl.Color.white);
-                rl.playSound(lightning);
+                rl.playSound(audios.lightning);
             } else {
                 rl.clearBackground(rl.Color.gray);
             }
@@ -125,9 +126,12 @@ pub fn main() void {
         {
             // Camera config
             cameras.top_view_camera.begin();
-            defer cameras.top_view_camera.end();
             cameras.front_camera.begin();
-            defer cameras.top_view_camera.end();
+
+            defer {
+                cameras.top_view_camera.end();
+                cameras.top_view_camera.end();
+            }
             if (cameras.current_camera == 0) {
                 rl.beginMode3D(cameras.top_view_camera);
             } else {
@@ -139,20 +143,20 @@ pub fn main() void {
 
             // Camera's position should increase due to speed.
 
-            cameras.front_camera.position.z += speed;
+            cameras.front_camera.position.z += train_speed;
 
-            if (speed > 0) {
-                speed -= 0.001;
-                rl.updateMusicStream(trainMusic);
-                if (speed < 1) {
-                    rl.setMusicPitch(trainMusic, speed);
+            if (train_speed > 0) {
+                train_speed -= 0.001;
+                rl.updateMusicStream(audios.trainMusic);
+                if (train_speed < 1) {
+                    rl.setMusicPitch(audios.trainMusic, train_speed);
                 }
                 // trainMusic.looping = true;
             }
 
             // Play horn
             if (rl.isKeyDown(rl.KeyboardKey.key_h)) {
-                rl.updateMusicStream(horn);
+                rl.updateMusicStream(audios.horn);
             }
             if (rl.isKeyPressed(rl.KeyboardKey.key_c)) {
                 if (cameras.current_camera == 0) {
@@ -164,23 +168,23 @@ pub fn main() void {
 
             // reset playing horn
             if (rl.isKeyReleased(rl.KeyboardKey.key_h)) {
-                rl.seekMusicStream(horn, 0);
+                rl.seekMusicStream(audios.horn, 0);
             }
 
             // Increase speed
-            if (rl.isKeyDown(rl.KeyboardKey.key_w) and speed < 5.1) {
-                speed += 0.005;
+            if (rl.isKeyDown(rl.KeyboardKey.key_w) and train_speed < 5.1) {
+                train_speed += 0.005;
             }
 
             // Breaks
             if (rl.isKeyDown(rl.KeyboardKey.key_b)) {
-                if (speed > 0) {
-                    speed -= 0.02;
+                if (train_speed > 0) {
+                    train_speed -= 0.02;
                 }
             }
 
             if (rl.isKeyDown(rl.KeyboardKey.key_s)) {
-                speed -= 0.005;
+                train_speed -= 0.005;
             }
             // std.debug.print("{}\n", .{camera.position.z});
 
@@ -197,16 +201,16 @@ pub fn main() void {
                 if (raindropAvgHeight < 0) {
                     raindropAvgHeight = 5;
                 }
+                var rain_position = constants.rain_config { };
                 // Create rain
-                var rain_x: i8 = -10;
-                while (rain_x < 10) : (rain_x += 1) {
-                    var rain_y: i8 = -10;
-                    while (rain_y < 10) : (rain_y += 1) {
+                while (rain_position.x < 10) : (rain_position.x += 1) {
+                    rain_position.y = -10;
+                    while (rain_position.y < 10) : (rain_position.y += 1) {
                         rl.drawCube(
                             rl.Vector3.init(
-                                cameras.front_camera.position.x + 0.5 + @as(f16, @floatFromInt(rain_x + rl.getRandomValue(1, 2))),
+                                cameras.front_camera.position.x + 0.5 + @as(f16, @floatFromInt(rain_position.x + rl.getRandomValue(1, 2))),
                                 @as(f16, @floatFromInt(raindropAvgHeight + rl.getRandomValue(0, 3))),
-                                cameras.front_camera.position.z + @as(f16, @floatFromInt(rain_y + rl.getRandomValue(0, 2))),
+                                cameras.front_camera.position.z + @as(f16, @floatFromInt(rain_position.y + rl.getRandomValue(0, 2))),
                             ),
                             0.01,
                             0.2,
@@ -216,7 +220,7 @@ pub fn main() void {
                     }
                 }
                 // Update rain music
-                rl.updateMusicStream(rainMusic);
+                rl.updateMusicStream(audios.rainMusic);
             }
             var x: f32 = -5;
             while (x < 4) : (x += 1) {
@@ -326,7 +330,7 @@ pub fn main() void {
                 }
             }
             // std.debug.print("{}\n", .{@as(i32, @intFromFloat(camera.position.z))});
-            if (rl.isKeyDown(rl.KeyboardKey.key_w) and speed > 5.1) {
+            if (rl.isKeyDown(rl.KeyboardKey.key_w) and train_speed > 5.1) {
                 rl.drawText("Max Speed", constants.screenWidth / 2 - 100, constants.screenHeight / 2 - 100, 20, rl.Color.red);
             }
             if (cameras.front_camera.position.z > 1967 or cameras.front_camera.position.z < 7) {
@@ -337,12 +341,12 @@ pub fn main() void {
             if (rules.iteration != 0 and @rem(rules.iteration, 2) == 0) {
                 rules.stop_at_next_station = true;
             }
-            if (rules.stop_at_next_station and rules.within_station_boundary and speed <= 0) {
+            if (rules.stop_at_next_station and rules.within_station_boundary and train_speed <= 0) {
                 rules.stop_at_next_station = false; // after 1 station
                 rules.iteration = 0;
                 // WIN
             }
-            if (rules.stop_at_next_station and cameras.front_camera.position.z > 1990 and speed != 0) {
+            if (rules.stop_at_next_station and cameras.front_camera.position.z > 1990 and train_speed != 0) {
                 rules.failed = true;
             }
             if (rl.isKeyDown(rl.KeyboardKey.key_h) and rules.within_station_boundary and !rules.honked) {
@@ -369,7 +373,7 @@ pub fn main() void {
                 const fmt = "Speed: {d} M/h";
                 const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
                 var buf: [len:0]u8 = undefined;
-                const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(speed * 2 * 10))}) catch unreachable;
+                const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(train_speed * 2 * 10))}) catch unreachable;
                 rl.drawText(text, constants.screenWidth - 220, 30, 20, rl.Color.black);
             }
             {
@@ -391,7 +395,7 @@ pub fn main() void {
 
             if (cameras.front_camera.position.z < 0) {
                 cameras.front_camera.position.z = 0.1;
-                speed = 0;
+                train_speed = 0;
                 rl.drawText("Wrong Direction", constants.screenWidth / 2 - 100, constants.screenHeight / 2 - 100, 20, rl.Color.red);
             }
         }
