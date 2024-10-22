@@ -31,6 +31,8 @@ pub const models_config = struct {
     scene: rl.Model,
 };
 pub const cameras_config = struct {
+    top_view_camera_value: u4 = 0,
+    front_camera_value: u4 = 1,
     current_camera: u7,
     front_camera: rl.Camera3D,
     top_view_camera: rl.Camera3D,
@@ -43,6 +45,7 @@ pub const audios_config = struct {
 };
 
 pub const rain_config = struct {
+    raindropAvgHeight:i32,
     x: i8 = -10,
     y: i8 = 10,
 };

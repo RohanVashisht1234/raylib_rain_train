@@ -1,6 +1,7 @@
 const std = @import("std");
 const rl = @import("raylib");
 const constants = @import("constants.zig");
+const loaders = @import("loaders.zig");
 
 pub fn main() void {
     // ----------- Set rules -------------
@@ -60,46 +61,17 @@ pub fn main() void {
     };
 
     // -------------- Load and Store 3D Models ------------------
-    const models = constants.models_config{
-        .red_signal = rl.loadModel("./assets/red_signal.glb"),
-        .green_signal = rl.loadModel("./assets/green_signal.glb"),
-        .terrain = rl.loadModel("./assets/terrain.glb"),
-        .tree = rl.loadModel("./assets/tree.glb"),
-        .track = rl.loadModel("./assets/track.glb"),
-        .train = rl.loadModel("./assets/train.glb"),
-        .train_station = rl.loadModel("./assets/train_station.glb"),
-        .sign = rl.loadModel("./assets/sign.glb"),
-        .electricity = rl.loadModel("./assets/electricity.glb"),
-        .electricity_r = rl.loadModel("./assets/electricity_r.glb"),
-        .track_bent = rl.loadModel("./assets/track_bent.glb"),
-        .track_bottom = rl.loadModel("./assets/track_bottom.glb"),
-        .track_bent_r = rl.loadModel("./assets/track_bent_r.glb"),
-        .mountains = rl.loadModel("./assets/mountains.glb"),
-        .scene = rl.loadModel("./assets/scene.glb"),
-    };
-    defer {
-        rl.unloadModel(models.red_signal);
-        rl.unloadModel(models.green_signal);
-        rl.unloadModel(models.terrain);
-        rl.unloadModel(models.tree);
-        rl.unloadModel(models.track);
-        rl.unloadModel(models.train);
-        rl.unloadModel(models.train_station);
-        rl.unloadModel(models.sign);
-        rl.unloadModel(models.electricity);
-        rl.unloadModel(models.electricity_r);
-        rl.unloadModel(models.track_bent);
-        rl.unloadModel(models.track_bottom);
-        rl.unloadModel(models.track_bent_r);
-        rl.unloadModel(models.mountains);
-        rl.unloadModel(models.scene);
-    }
+    const models = loaders.load3DModels();
+    defer loaders.unload3DModels(models);
+
     var dummy_train = rl.Vector3.init(9.7, 1.5, 200);
     var protagonist_train = rl.Vector3.init(20, 1.5, 10);
 
     // -------- Important mutable variables -------------
     var train_speed: f32 = 0;
-    var raindropAvgHeight: i32 = 5;
+    var rain_position = constants.rain_config{
+        .raindropAvgHeight = 5,
+    };
 
     // =-=-=-=-= Game Loop =-=-=-=-=-=
     while (!rl.windowShouldClose()) {
@@ -131,18 +103,15 @@ pub fn main() void {
             defer {
                 cameras.top_view_camera.end();
                 cameras.top_view_camera.end();
+                rl.endMode3D();
             }
-            if (cameras.current_camera == 0) {
+            if (cameras.current_camera == cameras.top_view_camera_value) {
                 rl.beginMode3D(cameras.top_view_camera);
             } else {
                 rl.beginMode3D(cameras.front_camera);
             }
-            defer rl.endMode3D();
             cameras.top_view_camera.position.z = cameras.front_camera.position.z + 50;
             cameras.top_view_camera.target = cameras.front_camera.position;
-
-            // Camera's position should increase due to speed.
-
             cameras.front_camera.position.z += train_speed;
 
             if (train_speed > 0) {
@@ -151,23 +120,22 @@ pub fn main() void {
                 if (train_speed < 1) {
                     rl.setMusicPitch(audios.trainMusic, train_speed);
                 }
-                // trainMusic.looping = true;
             }
 
             // Play horn
-            if (rl.isKeyDown(rl.KeyboardKey.key_h)) {
-                rl.updateMusicStream(audios.horn);
-            }
+
             if (rl.isKeyPressed(rl.KeyboardKey.key_c)) {
-                if (cameras.current_camera == 0) {
-                    cameras.current_camera = 1;
+                if (cameras.current_camera == cameras.top_view_camera_value) {
+                    cameras.current_camera = cameras.front_camera_value;
                 } else {
-                    cameras.current_camera = 0;
+                    cameras.current_camera = cameras.top_view_camera_value;
                 }
             }
 
             // reset playing horn
-            if (rl.isKeyReleased(rl.KeyboardKey.key_h)) {
+            if (rl.isKeyDown(rl.KeyboardKey.key_h)) {
+                rl.updateMusicStream(audios.horn);
+            } else if (rl.isKeyReleased(rl.KeyboardKey.key_h)) {
                 rl.seekMusicStream(audios.horn, 0);
             }
 
@@ -177,10 +145,8 @@ pub fn main() void {
             }
 
             // Breaks
-            if (rl.isKeyDown(rl.KeyboardKey.key_b)) {
-                if (train_speed > 0) {
-                    train_speed -= 0.02;
-                }
+            if (rl.isKeyDown(rl.KeyboardKey.key_b) and train_speed > 0) {
+                train_speed -= 0.02;
             }
 
             if (rl.isKeyDown(rl.KeyboardKey.key_s)) {
@@ -196,12 +162,13 @@ pub fn main() void {
 
             // ------- Rain related updates --------
             {
+                rain_position.x = -10;
+                rain_position.y = 10;
                 // Update Rain height
-                raindropAvgHeight -= 1;
-                if (raindropAvgHeight < 0) {
-                    raindropAvgHeight = 5;
+                rain_position.raindropAvgHeight -= 1;
+                if (rain_position.raindropAvgHeight < 0) {
+                    rain_position.raindropAvgHeight = 5;
                 }
-                var rain_position = constants.rain_config { };
                 // Create rain
                 while (rain_position.x < 10) : (rain_position.x += 1) {
                     rain_position.y = -10;
@@ -209,7 +176,7 @@ pub fn main() void {
                         rl.drawCube(
                             rl.Vector3.init(
                                 cameras.front_camera.position.x + 0.5 + @as(f16, @floatFromInt(rain_position.x + rl.getRandomValue(1, 2))),
-                                @as(f16, @floatFromInt(raindropAvgHeight + rl.getRandomValue(0, 3))),
+                                @as(f16, @floatFromInt(rain_position.raindropAvgHeight + rl.getRandomValue(0, 3))),
                                 cameras.front_camera.position.z + @as(f16, @floatFromInt(rain_position.y + rl.getRandomValue(0, 2))),
                             ),
                             0.01,
@@ -266,10 +233,9 @@ pub fn main() void {
                 }
             }
             {
-                var z: f32 = 1;
                 rl.drawModel(models.sign, rl.Vector3.init(30, 2, 200), 0.1, rl.Color.gray);
-                while (z < 8) : (z += 1) {
-                    rl.drawModel(models.sign, rl.Vector3.init(30, 2, z * 550), 0.1, rl.Color.gray);
+                for (1..8) |z| {
+                    rl.drawModel(models.sign, rl.Vector3.init(30, 2, @as(f32, @floatFromInt(z)) * 550), 0.1, rl.Color.gray);
                 }
             }
             rl.drawModel(models.train_station, rl.Vector3.init(35, 3.4, -9), 0.3, rl.Color.gray);
@@ -323,11 +289,7 @@ pub fn main() void {
                 rl.drawText("- Press I to hide these instructions", 40, 120, 10, rl.Color.dark_gray);
             }
             if (rl.isKeyPressed(rl.KeyboardKey.key_i)) {
-                if (rules.show_instructions) {
-                    rules.show_instructions = false;
-                } else {
-                    rules.show_instructions = true;
-                }
+                rules.show_instructions = !rules.show_instructions;
             }
             // std.debug.print("{}\n", .{@as(i32, @intFromFloat(camera.position.z))});
             if (rl.isKeyDown(rl.KeyboardKey.key_w) and train_speed > 5.1) {
