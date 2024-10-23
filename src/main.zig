@@ -89,12 +89,12 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
             while (rain_position.x < 10) : (rain_position.x += 1) {
                 rain_position.y = 0;
                 while (rain_position.y < 10) : (rain_position.y += 1) {
-                    const rand_value = rl.getRandomValue(1, 2);
+                    const rand_value: f32 = @floatFromInt(rl.getRandomValue(1, 2));
                     rl.drawCube(
                         rl.Vector3.init(
-                            cameras.*.front_camera.position.x + 0.5 + @as(f32, @floatFromInt(rain_position.x + rand_value)),
-                            @as(f32, @floatFromInt(rain_position.raindropAvgHeight + rand_value)),
-                            cameras.*.front_camera.position.z + @as(f32, @floatFromInt(rain_position.y + rand_value)),
+                            cameras.*.front_camera.position.x + 0.5 + rain_position.x + rand_value,
+                            rain_position.raindropAvgHeight + rand_value,
+                            cameras.*.front_camera.position.z + rain_position.y + rand_value,
                         ),
                         0.01,
                         0.2,
@@ -145,7 +145,7 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
         {
             rl.drawModel(models.sign, rl.Vector3.init(30, 2, 200), 0.1, rl.Color.gray);
             for (1..8) |z| {
-                rl.drawModel(models.sign, rl.Vector3.init(30, 2, @as(f32, @floatFromInt(z)) * 550), 0.1, rl.Color.gray);
+                rl.drawModel(models.sign, rl.Vector3.init(30, 2, @as(f32, @floatFromInt(z * 550))), 0.1, rl.Color.gray);
             }
         }
         rl.drawModel(models.train_station, rl.Vector3.init(35, 3.4, -9), 0.3, rl.Color.gray);
@@ -170,7 +170,7 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
         var forGrass: f32 = -30;
         while (forGrass < 130) : (forGrass += 1) {
             var forGrassx: f32 = -40;
-            const forGrassZ: f32 = @as(f32, forGrass) * 20; // compute this once use multiple times.
+            const forGrassZ: f32 = forGrass * 20; // compute this once use multiple times.
             while (forGrassx < 100) : (forGrassx += 20) {
                 rl.drawModel(models.grass, rl.Vector3.init(forGrassx, 0.1, forGrassZ), 1, rl.Color.gray);
             }
@@ -190,7 +190,6 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
     if (rl.isKeyPressed(rl.KeyboardKey.key_i)) {
         rules.*.show_instructions = !rules.*.show_instructions;
     }
-    // std.debug.print("{}\n", .{@as(i32, @intFromFloat(camera.position.z))});
     if (rl.isKeyDown(rl.KeyboardKey.key_w) and train_speed.* > 5.1) {
         rl.drawText("Max Speed", constants.screenWidth / 2 - 100, constants.screenHeight / 2 - 100, 20, rl.Color.red);
     }
@@ -208,7 +207,7 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
     if (rules.*.stop_at_next_station and cameras.*.front_camera.position.z > 1990 and train_speed.* != 0) {
         rules.*.failed = true;
     }
-    if (rules.*.failed){
+    if (rules.*.failed) {
         rl.drawRectangle(0, 0, constants.screenWidth, constants.screenHeight, rl.Color.dark_gray.fade(0.5));
         rl.drawRectangleLines(10, 10, 250, 70, rl.Color.dark_gray);
         rl.drawText("Failed", constants.screenWidth / 2 - 150, constants.screenHeight / 2 - 100, 200, rl.Color.red);

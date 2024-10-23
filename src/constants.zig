@@ -45,7 +45,7 @@ pub const audios_config = struct {
 };
 
 pub const rain_config = struct {
-    raindropAvgHeight: i32,
-    x: i8 = -10,
-    y: i8 = 10,
+    raindropAvgHeight: f32,
+    x: f16 = -10,
+    y: f16 = 10,
 };
