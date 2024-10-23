@@ -2,6 +2,7 @@ const std = @import("std");
 const rl = @import("raylib");
 const constants = @import("constants.zig");
 const loaders = @import("loaders.zig");
+const functions = @import("functions.zig");
 
 pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_config, dummy_train: *rl.Vector3, protagonist_train: *rl.Vector3, train_speed: *f32, rain_position: *constants.rain_config, rules: *constants._rules, models: constants.models_config) void {
     // camera.update(rl.CameraMode.camera_custom);
@@ -14,13 +15,11 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
     defer rl.endDrawing();
 
     // Every time result is 30, do a lightning, with lightning effects.
-    {
-        if (rl.getRandomValue(0, 600) == 30) {
-            rl.clearBackground(rl.Color.white);
-            rl.playSound(audios.lightning);
-        } else {
-            rl.clearBackground(rl.Color.gray);
-        }
+    if (rl.getRandomValue(0, 600) == 30) {
+        rl.clearBackground(rl.Color.white);
+        rl.playSound(audios.lightning);
+    } else {
+        rl.clearBackground(rl.Color.gray);
     }
 
     // Draw actual game
@@ -34,8 +33,9 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
 
         defer {
             if (cameras.*.current_camera == cameras.*.top_view_camera_value) {
-            cameras.*.top_view_camera.end();} else {
-            cameras.*.top_view_camera.end();
+                cameras.*.top_view_camera.end();
+            } else {
+                cameras.*.front_camera.end();
             }
             rl.endMode3D();
         }
@@ -76,14 +76,9 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
         // Increase speed
         if (rl.isKeyDown(rl.KeyboardKey.key_w) and train_speed.* < 5.1) {
             train_speed.* += 0.005;
-        }
-
-        // Breaks
-        if (rl.isKeyDown(rl.KeyboardKey.key_b) and train_speed.* > 0) {
+        } else if (rl.isKeyDown(rl.KeyboardKey.key_b) and train_speed.* > 0) {
             train_speed.* -= 0.02;
-        }
-
-        if (rl.isKeyDown(rl.KeyboardKey.key_s)) {
+        } else if (rl.isKeyDown(rl.KeyboardKey.key_s)) {
             train_speed.* -= 0.005;
         }
         // std.debug.print("{}\n", .{camera.position.z});
@@ -126,9 +121,7 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
         var x: f32 = -5;
         while (x < 4) : (x += 1) {
             var z: f32 = -20;
-            if (x == 0 or x == 1) {
-                continue;
-            }
+            if (x == 0 or x == 1) continue;
             while (z < 100) : (z += 1) {
                 rl.drawModel(models.tree, rl.Vector3.init(x * 20, 12, z * 40), 0.3, rl.Color.brown);
             }
@@ -150,19 +143,14 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
         protagonist_train.*.z = cameras.*.front_camera.position.z - 30;
         rl.drawModel(models.train, dummy_train.*, 0.052, rl.Color.gray);
         rl.drawModel(models.train, protagonist_train.*, 0.052, rl.Color.gray);
-        if (dummy_train.*.z < 1) {
-            dummy_train.*.z = 2000;
-        }
+        if (dummy_train.*.z < 1) dummy_train.*.z = 2000;
+
         dummy_train.*.z -= 0.5;
         {
             var z: f32 = -20;
             // rl.drawModel(electricity, rl.Vector3.init(30, 2,  200), 0.1, rl.Color.gray);
             while (z < 50) : (z += 1) {
                 rl.drawModel(models.electricity, rl.Vector3.init(23.5, 6, z * 50), 0.1, rl.Color.gray);
-            }
-            z = -20;
-
-            while (z < 50) : (z += 1) {
                 rl.drawModel(models.electricity_r, rl.Vector3.init(8, 4.5, z * 54), 0.1, rl.Color.gray);
             }
         }
@@ -181,18 +169,10 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
             rl.drawModel(models.green_signal, rl.Vector3.init(28, 2.4, 2040), 0.1, rl.Color.gray);
             rl.drawModel(models.green_signal, rl.Vector3.init(28, 2.4, 40), 0.1, rl.Color.gray);
         }
-        // rl.drawCube(rl.Vector3.init(11, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
-        {
-            var fortrack: f32 = -20;
-            while (fortrack < 500) : (fortrack += 1) {
-                rl.drawModel(models.track_bottom, rl.Vector3.init(20.7, 0.4, fortrack * 5), 0.3, rl.Color.dark_gray);
-            }
-        }
-        {
-            var fortrack: f32 = -20;
-            while (fortrack < 500) : (fortrack += 1) {
-                rl.drawModel(models.track_bottom, rl.Vector3.init(10.7, 0.4, fortrack * 5), 0.3, rl.Color.dark_gray);
-            }
+        var fortrack: f32 = -20;
+        while (fortrack < 500) : (fortrack += 1) {
+            rl.drawModel(models.track_bottom, rl.Vector3.init(20.7, 0.4, fortrack * 5), 0.3, rl.Color.dark_gray);
+            rl.drawModel(models.track_bottom, rl.Vector3.init(10.7, 0.4, fortrack * 5), 0.3, rl.Color.dark_gray);
         }
         rl.drawModel(models.track_bent_r, rl.Vector3.init(15.7, 1.5, 50), 0.15, rl.Color.dark_gray);
         rl.drawModel(models.track_bent, rl.Vector3.init(15.7, 1.5, 1720), 0.15, rl.Color.dark_gray);
@@ -230,13 +210,11 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
             rl.drawText("Max Speed", constants.screenWidth / 2 - 100, constants.screenHeight / 2 - 100, 20, rl.Color.red);
         }
         if (cameras.*.front_camera.position.z > 1967 or cameras.*.front_camera.position.z < 7) {
-            rules.*.within_station_boundary = true;
-        } else {
-            rules.*.within_station_boundary = false;
+            rules.*.within_station_boundary = !rules.*.within_station_boundary;
         }
-        if (rules.*.iteration != 0 and @rem(rules.*.iteration, 2) == 0) {
-            rules.*.stop_at_next_station = true;
-        }
+
+        rules.*.stop_at_next_station = rules.*.iteration != 0 and @rem(rules.*.iteration, 2) == 0;
+
         if (rules.*.stop_at_next_station and rules.*.within_station_boundary and train_speed.* <= 0) {
             rules.*.stop_at_next_station = false; // after 1 station
             rules.*.iteration = 0;
@@ -258,35 +236,16 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
             rl.drawRectangleLines(10, 10, 250, 70, rl.Color.dark_gray);
             rl.drawText("Failed", constants.screenWidth / 2 - 150, constants.screenHeight / 2 - 100, 200, rl.Color.red);
         }
-        {
-            const fmt = "Score: {d}";
-            const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
-            var buf: [len:0]u8 = undefined;
-            const text = std.fmt.bufPrintZ(&buf, fmt, .{rules.*.score}) catch unreachable;
-            rl.drawText(text, constants.screenWidth - 220, 10, 20, rl.Color.black);
-        }
-        {
-            const fmt = "Speed: {d} M/h";
-            const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
-            var buf: [len:0]u8 = undefined;
-            const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(train_speed.* * 2 * 10))}) catch unreachable;
-            rl.drawText(text, constants.screenWidth - 220, 30, 20, rl.Color.black);
-        }
-        {
-            const fmt = "Next station: {d} m";
-            const len = comptime std.fmt.count(fmt, .{std.math.maxInt(i32)});
-            var buf: [len:0]u8 = undefined;
-            const text = std.fmt.bufPrintZ(&buf, fmt, .{@as(i32, @intFromFloat(2000 - cameras.*.front_camera.position.z))}) catch unreachable;
-            rl.drawText(text, constants.screenWidth - 220, 50, 20, rl.Color.black);
-        }
-        {
-            if (rules.*.stop_at_next_station) {
-                rl.drawText("Status: Stop at", constants.screenWidth - 220, 70, 20, rl.Color.red);
-                rl.drawText("          next station", constants.screenWidth - 220, 90, 20, rl.Color.red);
-                rl.drawText("Stop at Next station", constants.screenWidth - 500, 300, 25, rl.Color.red);
-            } else {
-                rl.drawText("Status: Don't stop", constants.screenWidth - 220, 70, 20, rl.Color.green);
-            }
+        rl.drawText(functions.concatenate("Score: {d}", @as(f32, @floatFromInt(rules.*.score))), constants.screenWidth - 220, 10, 20, rl.Color.black);
+        rl.drawText(functions.concatenate("Speed: {d} M/h", 2000 - train_speed.* * 2 * 10), constants.screenWidth - 220, 30, 20, rl.Color.black);
+        rl.drawText(functions.concatenate("Next station: {d} m", 2000 - cameras.*.front_camera.position.z), constants.screenWidth - 220, 50, 20, rl.Color.black);
+
+        if (rules.*.stop_at_next_station) {
+            rl.drawText("Status: Stop at", constants.screenWidth - 220, 70, 20, rl.Color.red);
+            rl.drawText("          next station", constants.screenWidth - 220, 90, 20, rl.Color.red);
+            rl.drawText("Stop at Next station", constants.screenWidth - 500, 300, 25, rl.Color.red);
+        } else {
+            rl.drawText("Status: Don't stop", constants.screenWidth - 220, 70, 20, rl.Color.green);
         }
 
         if (cameras.*.front_camera.position.z < 0) {
