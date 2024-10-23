@@ -18,7 +18,7 @@ pub fn load3DModels() constants.models_config {
         .track_bottom = rl.loadModel("./assets/track_bottom.glb"),
         .track_bent_r = rl.loadModel("./assets/track_bent_r.glb"),
         .mountains = rl.loadModel("./assets/mountains.glb"),
-        .scene = rl.loadModel("./assets/scene.glb"),
+        .grass = rl.loadModel("./assets/scene.glb"),
     };
 }
 
@@ -37,7 +37,7 @@ pub fn unload3DModels(models: constants.models_config) void {
     rl.unloadModel(models.track_bottom);
     rl.unloadModel(models.track_bent_r);
     rl.unloadModel(models.mountains);
-    rl.unloadModel(models.scene);
+    rl.unloadModel(models.grass);
 }
 
 pub fn loadAudio() constants.audios_config {

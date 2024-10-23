@@ -28,7 +28,7 @@ pub const models_config = struct {
     track_bottom: rl.Model,
     track_bent_r: rl.Model,
     mountains: rl.Model,
-    scene: rl.Model,
+    grass: rl.Model,
 };
 pub const cameras_config = struct {
     top_view_camera_value: u4 = 0,
@@ -45,7 +45,7 @@ pub const audios_config = struct {
 };
 
 pub const rain_config = struct {
-    raindropAvgHeight:i32,
+    raindropAvgHeight: i32,
     x: i8 = -10,
     y: i8 = 10,
 };
