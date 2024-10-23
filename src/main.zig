@@ -207,6 +207,8 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
     }
     if (rules.*.stop_at_next_station and cameras.*.front_camera.position.z > 1990 and train_speed.* != 0) {
         rules.*.failed = true;
+    }
+    if (rules.*.failed){
         rl.drawRectangle(0, 0, constants.screenWidth, constants.screenHeight, rl.Color.dark_gray.fade(0.5));
         rl.drawRectangleLines(10, 10, 250, 70, rl.Color.dark_gray);
         rl.drawText("Failed", constants.screenWidth / 2 - 150, constants.screenHeight / 2 - 100, 200, rl.Color.red);
