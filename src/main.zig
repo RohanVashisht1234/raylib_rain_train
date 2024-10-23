@@ -87,13 +87,14 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
             }
             // Create rain
             while (rain_position.x < 10) : (rain_position.x += 1) {
-                rain_position.y = -10;
+                rain_position.y = 0;
                 while (rain_position.y < 10) : (rain_position.y += 1) {
+                    const rand_value = rl.getRandomValue(1, 2);
                     rl.drawCube(
                         rl.Vector3.init(
-                            cameras.*.front_camera.position.x + 0.5 + @as(f16, @floatFromInt(rain_position.x + rl.getRandomValue(1, 2))),
-                            @as(f16, @floatFromInt(rain_position.raindropAvgHeight + rl.getRandomValue(0, 3))),
-                            cameras.*.front_camera.position.z + @as(f16, @floatFromInt(rain_position.y + rl.getRandomValue(0, 2))),
+                            cameras.*.front_camera.position.x + 0.5 + @as(f32, @floatFromInt(rain_position.x + rand_value)),
+                            @as(f32, @floatFromInt(rain_position.raindropAvgHeight + rand_value)),
+                            cameras.*.front_camera.position.z + @as(f32, @floatFromInt(rain_position.y + rand_value)),
                         ),
                         0.01,
                         0.2,
@@ -157,12 +158,12 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
             rl.drawModel(models.green_signal, rl.Vector3.init(28, 2.4, 40), 0.1, rl.Color.gray);
         }
         var fortrack: f32 = -20;
-        while (fortrack < 500) : (fortrack += 1) {
-            rl.drawModel(models.track_bottom, rl.Vector3.init(20.7, 0.4, fortrack * 5), 0.3, rl.Color.dark_gray);
-            rl.drawModel(models.track_bottom, rl.Vector3.init(10.7, 0.4, fortrack * 5), 0.3, rl.Color.dark_gray);
+        while (fortrack < 450) : (fortrack += 1) {
+            rl.drawModel(models.track_bottom, rl.Vector3.init(20.7, 0.4, fortrack * 6), 0.3, rl.Color.dark_gray);
+            rl.drawModel(models.track_bottom, rl.Vector3.init(10.7, 0.4, fortrack * 6), 0.3, rl.Color.dark_gray);
         }
-        rl.drawModel(models.track_bent_r, rl.Vector3.init(15.7, 1.5, 50), 0.15, rl.Color.dark_gray);
-        rl.drawModel(models.track_bent, rl.Vector3.init(15.7, 1.5, 1720), 0.15, rl.Color.dark_gray);
+        rl.drawModel(models.track_bent_r, rl.Vector3.init(15.7, 1.7, 50), 0.15, rl.Color.dark_gray);
+        rl.drawModel(models.track_bent, rl.Vector3.init(15.7, 1.7, 1720), 0.15, rl.Color.dark_gray);
         // rl.drawCube(rl.Vector3.init(20.8, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
         rl.drawCube(rl.Vector3.init(21, 8, 1000), 0.1, 0.1, 2500, rl.Color.black);
         rl.drawCube(rl.Vector3.init(10.5, 8, 1000), 0.1, 0.1, 2500, rl.Color.black);
@@ -206,6 +207,9 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
     }
     if (rules.*.stop_at_next_station and cameras.*.front_camera.position.z > 1990 and train_speed.* != 0) {
         rules.*.failed = true;
+        rl.drawRectangle(0, 0, constants.screenWidth, constants.screenHeight, rl.Color.dark_gray.fade(0.5));
+        rl.drawRectangleLines(10, 10, 250, 70, rl.Color.dark_gray);
+        rl.drawText("Failed", constants.screenWidth / 2 - 150, constants.screenHeight / 2 - 100, 200, rl.Color.red);
     }
     if (rl.isKeyDown(rl.KeyboardKey.key_h) and rules.*.within_station_boundary and !rules.*.honked) {
         rules.*.honked = true;
@@ -215,11 +219,7 @@ pub fn game_loop(cameras: *constants.cameras_config, audios: constants.audios_co
     if (!rules.*.within_station_boundary) {
         rules.*.honked = false;
     }
-    if (rules.*.failed) {
-        rl.drawRectangle(0, 0, constants.screenWidth, constants.screenHeight, rl.Color.dark_gray.fade(0.5));
-        rl.drawRectangleLines(10, 10, 250, 70, rl.Color.dark_gray);
-        rl.drawText("Failed", constants.screenWidth / 2 - 150, constants.screenHeight / 2 - 100, 200, rl.Color.red);
-    }
+
     rl.drawText(functions.concatenate("Score: {d}", @as(f32, @floatFromInt(rules.*.score))), constants.screenWidth - 220, 10, 20, rl.Color.black);
     rl.drawText(functions.concatenate("Speed: {d} M/h", train_speed.* * 2 * 10), constants.screenWidth - 220, 30, 20, rl.Color.black);
     rl.drawText(functions.concatenate("Next station: {d} m", 2000 - cameras.*.front_camera.position.z), constants.screenWidth - 220, 50, 20, rl.Color.black);

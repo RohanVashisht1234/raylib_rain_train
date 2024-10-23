@@ -61,7 +61,7 @@ pub fn loadCameras() constants.cameras_config {
         .current_camera = 0,
         .front_camera = rl.Camera3D{
             .position = rl.Vector3.init(20, 4, 4),
-            .target = rl.Vector3.init(20, -1.8, 10000000),
+            .target = rl.Vector3.init(20, -1.8, 10000),
             .up = rl.Vector3.init(0, 1, 0),
             .fovy = 60.0,
             .projection = rl.CameraProjection.camera_perspective,
