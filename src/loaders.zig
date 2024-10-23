@@ -39,3 +39,39 @@ pub fn unload3DModels(models: constants.models_config) void {
     rl.unloadModel(models.mountains);
     rl.unloadModel(models.scene);
 }
+
+pub fn loadAudio() constants.audios_config {
+    return constants.audios_config{
+        .rainMusic = rl.loadMusicStream("./music/rn.mp3"),
+        .lightning = rl.loadSound("./music/lightning.mp3"),
+        .trainMusic = rl.loadMusicStream("./music/train.mp3"),
+        .horn = rl.loadMusicStream("./music/horn.mp3"),
+    };
+}
+
+pub fn unloadAudio(audios: constants.audios_config) void {
+    rl.unloadMusicStream(audios.horn);
+    rl.unloadMusicStream(audios.rainMusic);
+    rl.unloadMusicStream(audios.trainMusic);
+    rl.unloadSound(audios.lightning);
+}
+
+pub fn loadCameras() constants.cameras_config {
+    return constants.cameras_config{
+        .current_camera = 0,
+        .front_camera = rl.Camera3D{
+            .position = rl.Vector3.init(20, 4, 4),
+            .target = rl.Vector3.init(20, -1.8, 10000000),
+            .up = rl.Vector3.init(0, 1, 0),
+            .fovy = 60.0,
+            .projection = rl.CameraProjection.camera_perspective,
+        },
+        .top_view_camera = rl.Camera3D{
+            .position = rl.Vector3.init(5, 20, 4),
+            .target = rl.Vector3.init(20, 4, 14),
+            .up = rl.Vector3.init(0, 1, 0),
+            .fovy = 60.0,
+            .projection = rl.CameraProjection.camera_perspective,
+        },
+    };
+}
