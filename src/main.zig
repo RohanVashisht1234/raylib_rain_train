@@ -20,14 +20,13 @@ pub fn main() void {
     rl.initAudioDevice();
 
     const audios = loaders.loadAudio();
-    rl.playMusicStream(audios.rainMusic);
     rl.playMusicStream(audios.trainMusic);
     rl.setMusicVolume(audios.trainMusic, 2);
     rl.playMusicStream(audios.horn);
     defer loaders.unloadAudio(audios);
 
     // ----------- Initialize Window -------------
-    rl.initWindow(constants.screenWidth, constants.screenHeight, "Raylib rain train");
+    rl.initWindow(constants.screenWidth, constants.screenHeight, "Raylib train");
     {
         rl.setTargetFPS(60);
 
@@ -44,21 +43,13 @@ pub fn main() void {
 
         // -------- Important mutable variables -------------
         var train_speed: f32 = 0;
-        var rain_position = constants.rain_config{
-            .raindropAvgHeight = 5,
-        };
         const target = rl.loadRenderTexture(constants.screenWidth, constants.screenHeight);
         const my_shader = rl.loadShader(null, "./assets/bloom.fs");
 
         while (!rl.windowShouldClose()) {
             rl.beginTextureMode(target);
             {
-                if (rl.getRandomValue(0, 600) == 30) {
-                    rl.clearBackground(rl.Color.white);
-                    rl.playSound(audios.lightning);
-                } else {
-                    rl.clearBackground(rl.Color.sky_blue);
-                }
+                rl.clearBackground(rl.Color.sky_blue);
                 var active_camera = if (cameras.current_camera == cameras.top_view_camera_value)
                     cameras.top_view_camera
                 else
@@ -110,36 +101,6 @@ pub fn main() void {
                         rules.iteration += 1;
                     }
 
-                    // ------- Rain related updates --------
-                    {
-                        rain_position.x = -10;
-                        rain_position.y = 10;
-                        // Update Rain height
-                        rain_position.raindropAvgHeight -= 1;
-                        if (rain_position.raindropAvgHeight < 0) {
-                            rain_position.raindropAvgHeight = 5;
-                        }
-                        // Create rain
-                        while (rain_position.x < 10) : (rain_position.x += 1) {
-                            rain_position.y = 0;
-                            while (rain_position.y < 10) : (rain_position.y += 1) {
-                                const rand_value: f32 = @floatFromInt(rl.getRandomValue(1, 2));
-                                rl.drawCube(
-                                    rl.Vector3.init(
-                                        cameras.front_camera.position.x + 0.5 + rain_position.x + rand_value,
-                                        rain_position.raindropAvgHeight + rand_value,
-                                        cameras.front_camera.position.z + rain_position.y + rand_value,
-                                    ),
-                                    0.01,
-                                    0.2,
-                                    0.01,
-                                    rl.Color.blue.fade(0.6),
-                                );
-                            }
-                        }
-                        // Update rain music
-                        rl.updateMusicStream(audios.rainMusic);
-                    }
                     var x: f32 = -5;
                     while (x < 4) : (x += 1) {
                         var z: f32 = -20;
@@ -180,9 +141,9 @@ pub fn main() void {
                     }
 
                     {
-                        rl.drawModel(models.sign, rl.Vector3.init(30, 2, 200), 0.1, rl.Color.dark_gray);
+                        rl.drawModel(models.sign, rl.Vector3.init(30, 2, 200), 0.1, rl.Color.gray);
                         for (1..8) |z| {
-                            rl.drawModel(models.sign, rl.Vector3.init(30, 2, @as(f32, @floatFromInt(z * 550))), 0.1, rl.Color.dark_gray);
+                            rl.drawModel(models.sign, rl.Vector3.init(30, 2, @as(f32, @floatFromInt(z * 550))), 0.1, rl.Color.gray);
                         }
                     }
                     rl.drawModel(models.train_station, rl.Vector3.init(35, 3.4, -9), 0.3, rl.Color.gray);
@@ -220,16 +181,9 @@ pub fn main() void {
             }
             rl.endTextureMode();
 
-            // Every time result is 30, do a lightning, with lightning effects.
-
             rl.beginDrawing();
             {
-                if (rl.getRandomValue(0, 600) == 30) {
-                    rl.clearBackground(rl.Color.white);
-                    rl.playSound(audios.lightning);
-                } else {
-                    rl.clearBackground(rl.Color.sky_blue);
-                }
+                rl.clearBackground(rl.Color.sky_blue);
                 rl.beginShaderMode(my_shader);
                 {
                     rl.drawTextureRec(target.texture, rl.Rectangle.init(0, 0, @as(f32, @floatFromInt(target.texture.width)), @floatFromInt(-target.texture.height)), rl.Vector2.init(0, 0), rl.Color.white);

@@ -42,8 +42,6 @@ pub fn unload3DModels(models: constants.models_config) void {
 
 pub fn loadAudio() constants.audios_config {
     return constants.audios_config{
-        .rainMusic = rl.loadMusicStream("./music/rn.mp3"),
-        .lightning = rl.loadSound("./music/lightning.mp3"),
         .trainMusic = rl.loadMusicStream("./music/train.mp3"),
         .horn = rl.loadMusicStream("./music/horn.mp3"),
     };
@@ -51,9 +49,7 @@ pub fn loadAudio() constants.audios_config {
 
 pub fn unloadAudio(audios: constants.audios_config) void {
     rl.unloadMusicStream(audios.horn);
-    rl.unloadMusicStream(audios.rainMusic);
     rl.unloadMusicStream(audios.trainMusic);
-    rl.unloadSound(audios.lightning);
 }
 
 pub fn loadCameras() constants.cameras_config {

@@ -38,14 +38,6 @@ pub const cameras_config = struct {
     top_view_camera: rl.Camera3D,
 };
 pub const audios_config = struct {
-    rainMusic: rl.Music,
-    lightning: rl.Sound,
     trainMusic: rl.Music,
     horn: rl.Music,
-};
-
-pub const rain_config = struct {
-    raindropAvgHeight: f32,
-    x: f16 = -10,
-    y: f16 = 10,
 };
