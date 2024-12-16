@@ -128,7 +128,7 @@ pub fn main() void {
                     rl.drawModel(models.train, dummy_train, 1.7, rl.Color.yellow);
                     rl.drawModel(models.train, protagonist_train_position, 1.7, rl.Color.light_gray);
                     protagonist_train_position.x = cameras.front_camera.position.x + 1.55;
-                    protagonist_train_position.z = cameras.front_camera.position.z - 50;
+                    protagonist_train_position.z = cameras.front_camera.position.z - 100;
                     if (dummy_train.z < 1) dummy_train.z = 2000;
 
                     dummy_train.z -= 0.5;
