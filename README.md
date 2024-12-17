@@ -22,3 +22,5 @@ Electric metal pole texture: kjpargeter on freepik.com.
 Bloom texture from: https://github.com/raysan5/raylib/blob/master/examples/shaders/resources/shaders/glsl100/bloom.fs
 
 Rest 3D models made using tinkercad and blender.
+
+Train sound effect by <a href="https://pixabay.com/users/phoenix_connection_brazil-6017471/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=99262">Sandro Lima</a> from <a href="https://pixabay.com/sound-effects//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=99262">Pixabay</a>

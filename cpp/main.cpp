@@ -4,10 +4,69 @@
 #define SCREEN_HEIGHT 1080
 
 #define RENDER_DISTANCE_BACK 550.0f
-#define RENDER_DISTANCE_FRONT 250.0f
+#define RENDER_DISTANCE_FRONT 550.0f
 
 #define RENDER_DISTANCE_BACK_FOR_TREES 600.0f
 #define RENDER_DISTANCE_FRONT_FOR_TREES 600.0f
+
+class CustomStd
+{
+    static int strLength(const char *str)
+    {
+        int len = 0;
+        while (str[len] != '\0')
+        {
+            ++len;
+        }
+        return len;
+    }
+
+    // Function to convert an int to a string
+    static void intToStr(unsigned int num, char *buffer)
+    {
+        int i = 0;
+        do
+        {
+            buffer[i++] = (num % 10) + '0'; // Get each digit
+            num /= 10;
+        } while (num > 0);
+        buffer[i] = '\0'; // Null-terminate the string
+
+        // Reverse the buffer
+        for (int j = 0, k = i - 1; j < k; ++j, --k)
+        {
+            char temp = buffer[j];
+            buffer[j] = buffer[k];
+            buffer[k] = temp;
+        }
+    }
+
+public:
+    static char *concatenate(const char *str, int num)
+    {
+        static char result[20];
+        // Get lengths of the string and int as string
+        int strLen = strLength(str);
+        char numBuffer[20];
+        intToStr(num, numBuffer);
+        int numLen = strLength(numBuffer);
+
+        // Copy the original string
+        for (int i = 0; i < strLen; ++i)
+        {
+            result[i] = str[i];
+        }
+
+        // Append the integer string
+        for (int i = 0; i < numLen; ++i)
+        {
+            result[strLen + i] = numBuffer[i];
+        }
+
+        result[strLen + numLen] = '\0'; // Null terminate
+        return result;
+    }
+};
 
 class Models
 {
@@ -65,15 +124,17 @@ public:
 class Musics
 {
 public:
-    Music train_background, horn;
+    Music train_background_protagonist, train_background_dummy, horn;
     Musics()
     {
-        train_background = LoadMusicStream("./music/train.mp3");
+        train_background_protagonist = LoadMusicStream("./music/train.mp3");
+        train_background_dummy = LoadMusicStream("./music/train.mp3");
         horn = LoadMusicStream("./music/horn.mp3");
     }
     ~Musics()
     {
-        UnloadMusicStream(train_background);
+        UnloadMusicStream(train_background_protagonist);
+        UnloadMusicStream(train_background_dummy);
         UnloadMusicStream(horn);
     }
 };
@@ -118,9 +179,8 @@ public:
 
 class Cameras
 {
-    int which_active_camera;
-
 public:
+    int which_active_camera;
     Camera3D active_camera;
     Camera3D front_camera;
     Camera3D top_view_camera;
@@ -190,7 +250,8 @@ public:
 int main()
 {
     InitRaylib rl;
-    PlayMusicStream(rl.musics.train_background);
+    PlayMusicStream(rl.musics.train_background_protagonist);
+    PlayMusicStream(rl.musics.train_background_dummy);
     PlayMusicStream(rl.musics.horn);
 
     while (!WindowShouldClose())
@@ -206,14 +267,27 @@ int main()
 
                     if (rl.train_config.protagonist_train_speed > 0.0f)
                     {
+                        UpdateMusicStream(rl.musics.train_background_protagonist);
+                        if (rl.train_config.protagonist_train_speed < 1)
+                        {
+                            SetMusicPitch(rl.musics.train_background_protagonist, rl.train_config.protagonist_train_speed);
+                        }
+                        SetMusicPan(rl.musics.train_background_protagonist, 0.5);
                         rl.train_config.protagonist_train_speed -= 0.001f;
+                    }
+
+                    if (rl.train_config.protagonist_train_position.z < rl.train_config.dummy_train_position.z + 100 && rl.train_config.protagonist_train_position.z > rl.train_config.dummy_train_position.z - 350)
+                    {
+                        UpdateMusicStream(rl.musics.train_background_dummy);
+                        SetMusicPitch(rl.musics.train_background_dummy, 1);
+                        SetMusicPan(rl.musics.train_background_dummy, rl.cameras.which_active_camera);
                     }
 
                     if (IsKeyPressed(KEY_C))
                     {
                         rl.cameras.switch_camera();
                     }
-                    if (IsKeyPressed(KEY_H))
+                    if (IsKeyDown(KEY_H))
                     {
                         UpdateMusicStream(rl.musics.horn);
                     }
@@ -238,6 +312,37 @@ int main()
                     {
                         rl.cameras.front_camera.position.z = 0.0f;
                         rl.rules.iteration += 1.0f;
+                    }
+                    if (rl.cameras.front_camera.position.z > 1967 or rl.cameras.front_camera.position.z < 7)
+                    {
+                        rl.rules.within_station_boundary = !rl.rules.within_station_boundary;
+                    }
+
+                    rl.rules.stop_at_next_station = rl.rules.iteration != 0 && rl.rules.iteration % 2 == 0;
+
+                    if (rl.rules.stop_at_next_station && rl.rules.within_station_boundary && rl.train_config.protagonist_train_speed <= 0)
+                    {
+                        rl.rules.stop_at_next_station = false; // after 1 station
+                        rl.rules.iteration = 0;
+                        // WIN
+                    }
+                    if (rl.rules.stop_at_next_station && rl.cameras.front_camera.position.z > 1990 && rl.train_config.protagonist_train_speed != 0)
+                    {
+                        rl.rules.failed = true;
+                    }
+                    if (IsKeyPressed(KEY_I))
+                    {
+                        rl.rules.show_instructions = !rl.rules.show_instructions;
+                    }
+                    if (IsKeyDown(KEY_H) and rl.rules.within_station_boundary and !rl.rules.honked)
+                    {
+                        rl.rules.honked = true;
+                        rl.rules.score += 100;
+                    }
+
+                    if (!rl.rules.within_station_boundary)
+                    {
+                        rl.rules.honked = false;
                     }
                 }
                 {
@@ -319,7 +424,7 @@ int main()
                     DrawModel(rl.models.track_bent_r, (Vector3){15.7, 1.7, 50}, 0.15f, DARKGRAY);
                     DrawModel(rl.models.track_bent, (Vector3){15.7, 1.7, 1720}, 0.15f, DARKGRAY);
 
-                    // rl.drawCube(rl.Vector3.init(20.8, 0.1, 0.0), 6, 0.01, 7000, rl.Color.dark_gray);
+                    // rl.drawCube(rl.Vector3.init(20.8, 0.1, 0.0), 6, 0.01, 7000, DARKGRAY);
                     DrawCube((Vector3){21, 9, 1000}, 0.1f, 0.1f, 2500, BLACK);
                     DrawCube((Vector3){21, 11.3, 1000}, 0.1f, 0.1f, 2500, BLACK);
                     DrawCube((Vector3){10.5, 9, 1000}, 0.1f, 0.1f, 2500, BLACK);
@@ -339,6 +444,50 @@ int main()
                 }
             }
             EndMode3D();
+            if (rl.rules.show_instructions)
+            {
+                DrawRectangle(10, 10, 250, 130, SKYBLUE);
+                DrawRectangleLines(10, 10, 250, 130, BLUE);
+                DrawText("Train controls:", 20, 20, 10, BLACK);
+                DrawText("- Go forward: W, Go back : S", 40, 40, 10, DARKGRAY);
+                DrawText("- Press H to Honk, Press B for breaks", 40, 60, 10, DARKGRAY);
+                DrawText("- Press C to change camera View", 40, 80, 10, DARKGRAY);
+                DrawText("- Honk at stations to increase score", 40, 100, 10, DARKGRAY);
+                DrawText("- Press I to hide these instructions", 40, 120, 10, DARKGRAY);
+            }
+
+            if (IsKeyPressed(KEY_W) && rl.train_config.protagonist_train_speed > 5.1)
+            {
+                DrawText("Max Speed", SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 - 100, 20, RED);
+            }
+            if (rl.rules.failed)
+            {
+                DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, DARKGRAY);
+                DrawRectangleLines(10, 10, 250, 70, DARKGRAY);
+                DrawText("Failed", SCREEN_WIDTH / 2 - 150, SCREEN_HEIGHT / 2 - 100, 200, RED);
+            }
+
+            DrawText(CustomStd::concatenate("Score: ", rl.rules.score), SCREEN_WIDTH - 220, 10, 20, BLACK);
+            DrawText(CustomStd::concatenate("Speed: ", rl.train_config.protagonist_train_speed * 2 * 10), SCREEN_WIDTH - 220, 30, 20, BLACK);
+            DrawText(CustomStd::concatenate("Next station: ", 2000 - rl.cameras.front_camera.position.z), SCREEN_WIDTH - 220, 50, 20, BLACK);
+
+            if (rl.rules.stop_at_next_station)
+            {
+                DrawText("Status: Stop at", SCREEN_WIDTH - 220, 70, 20, RED);
+                DrawText("          next station", SCREEN_WIDTH - 220, 90, 20, RED);
+                DrawText("Stop at Next station", SCREEN_WIDTH - 500, 300, 25, RED);
+            }
+            else
+            {
+                DrawText("Status: Don't stop", SCREEN_WIDTH - 220, 70, 20, GREEN);
+            }
+
+            if (rl.cameras.front_camera.position.z < 0)
+            {
+                rl.cameras.front_camera.position.z = 0.1;
+                rl.train_config.protagonist_train_speed = 0;
+                DrawText("Wrong Direction", SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 - 100, 20, RED);
+            }
         }
         EndDrawing();
     }
