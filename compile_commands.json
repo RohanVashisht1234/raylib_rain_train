@@ -1,0 +1,7 @@
+[
+    {
+        "directory": "/Users/rohanvashisht/raylib_rain_train",
+        "command": "clang++ ./cpp/main.cpp -I/opt/homebrew/Cellar/raylib/5.5/include -L/opt/homebrew/Cellar/raylib/5.5/lib -lraylib -o YourGame -std=c++11 -Wall",
+        "file": "./cpp/main.cpp"
+    }
+]
