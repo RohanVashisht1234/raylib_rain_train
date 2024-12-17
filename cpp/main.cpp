@@ -1,12 +1,13 @@
 #include <raylib.h>
+
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
 
-#define RENDER_DISTANCE_BACK 550
-#define RENDER_DISTANCE_FRONT 250
+#define RENDER_DISTANCE_BACK 550.0f
+#define RENDER_DISTANCE_FRONT 250.0f
 
-#define RENDER_DISTANCE_BACK_FOR_TREES 600
-#define RENDER_DISTANCE_FRONT_FOR_TREES RENDER_DISTANCE_BACK_FOR_TREES
+#define RENDER_DISTANCE_BACK_FOR_TREES 600.0f
+#define RENDER_DISTANCE_FRONT_FOR_TREES 600.0f
 
 class Models
 {
@@ -22,7 +23,6 @@ public:
         electricity,
         electricity_r,
         track_bent,
-        track_bottom,
         track_bent_r,
         mountains,
         grass;
@@ -39,7 +39,6 @@ public:
         electricity = LoadModel("./assets/electricity.glb"),
         electricity_r = LoadModel("./assets/electricity_r.glb"),
         track_bent = LoadModel("./assets/track_bent.glb"),
-        track_bottom = LoadModel("./assets/track_bottom.glb"),
         track_bent_r = LoadModel("./assets/track_bent_r.glb"),
         mountains = LoadModel("./assets/mountains.glb"),
         grass = LoadModel("./assets/scene.glb");
@@ -57,7 +56,6 @@ public:
         UnloadModel(electricity);
         UnloadModel(electricity_r);
         UnloadModel(track_bent);
-        UnloadModel(track_bottom);
         UnloadModel(track_bent_r);
         UnloadModel(mountains);
         UnloadModel(grass);
@@ -206,7 +204,7 @@ int main()
                 {
                     rl.cameras.update_active_camera(rl.train_config.protagonist_train_speed);
 
-                    if (rl.train_config.protagonist_train_speed > 0)
+                    if (rl.train_config.protagonist_train_speed > 0.0f)
                     {
                         rl.train_config.protagonist_train_speed -= 0.001f;
                     }
@@ -221,23 +219,19 @@ int main()
                     }
                     else if (IsKeyReleased(KEY_H))
                     {
-                        SeekMusicStream(rl.musics.horn, 0);
+                        SeekMusicStream(rl.musics.horn, 0.0f);
                     }
 
                     if (IsKeyDown(KEY_W) && rl.train_config.protagonist_train_speed < 5.1f)
                     {
                         rl.train_config.protagonist_train_speed += 0.005f;
                     }
-                    else if (rl.train_config.protagonist_train_speed > 0)
+                    else if (rl.train_config.protagonist_train_speed > 0.0f && IsKeyDown(KEY_B))
                     {
-                        if (IsKeyDown(KEY_B))
-                        {
-                            rl.train_config.protagonist_train_speed -= 0.02f;
-                        }
-                        else if (IsKeyDown(KEY_S))
-                        {
-                            rl.train_config.protagonist_train_speed -= 0.005f;
-                        }
+                    }
+                    else if (IsKeyDown(KEY_S))
+                    {
+                        rl.train_config.protagonist_train_speed -= 0.005f;
                     }
 
                     if (rl.cameras.front_camera.position.z > 2000.0f)
@@ -247,18 +241,18 @@ int main()
                     }
                 }
                 {
-                    for (float z = -20; z < 100; z += 1) // 'z' loop moved outside
+                    for (float z = -20.0f; z < 100.0f; z += 1.0f) // 'z' loop moved outside
                     {
-                        for (float x = -5; x < 4; x += 1) // 'x' loop inside
+                        for (float x = -5.0f; x < 4.0f; x += 1.0f) // 'x' loop inside
                         {
                             if (x == 0 || x == 1)
                                 continue;
 
-                            const float mul = z * 40;
+                            const float mul = z * 40.0f;
                             // Save Memory!!
                             if (mul < rl.cameras.active_camera.position.z - RENDER_DISTANCE_BACK_FOR_TREES || mul > rl.cameras.active_camera.position.z + RENDER_DISTANCE_FRONT_FOR_TREES)
                                 continue;
-                            DrawModel(rl.models.tree, (Vector3){x*20, 12, mul}, 0.3f, BROWN);
+                            DrawModel(rl.models.tree, (Vector3){x * 20, 12, mul}, 0.3f, BROWN);
                         }
                     }
 
@@ -271,7 +265,7 @@ int main()
 
                     for (float i = -30; i < 290; i += 1)
                     {
-                        const float mul = i * 8;
+                        const float mul = i * 8.0f;
                         // Save Memory!!!
                         if (mul < rl.cameras.active_camera.position.z - RENDER_DISTANCE_BACK || mul > rl.cameras.active_camera.position.z + RENDER_DISTANCE_FRONT)
                             continue;
@@ -282,7 +276,7 @@ int main()
                     // rl.drawModel(models.sky, rl.Vector3.init(protagonist_train_position.x, protagonist_train_position.y + 60.0, protagonist_train_position.z + 100.0), 500, rl.Color.light_gray);
 
                     DrawModel(rl.models.train, rl.train_config.dummy_train_position, 1.7f, YELLOW);
-                    DrawModel(rl.models.train, rl.train_config.protagonist_train_position, 1.7f, LIGHTGRAY);
+                    DrawModel(rl.models.train, rl.train_config.protagonist_train_position, 1.7f, RAYWHITE);
                     rl.train_config.protagonist_train_position.x = rl.cameras.front_camera.position.x + 1.55;
                     rl.train_config.protagonist_train_position.z = rl.cameras.front_camera.position.z - 100;
                     if (rl.train_config.dummy_train_position.z < -50)
@@ -335,6 +329,8 @@ int main()
                     {
                         float forGrassx = -40;
                         const float forGrassZ = forGrass * 20; // compute this once, use multiple times.
+                        if (forGrassZ < rl.cameras.active_camera.position.z - RENDER_DISTANCE_BACK || forGrassZ > rl.cameras.active_camera.position.z + RENDER_DISTANCE_FRONT)
+                            continue;
                         for (forGrassx = -40; forGrassx < 100; forGrassx += 20)
                         {
                             DrawModel(rl.models.grass, (Vector3){forGrassx, 0.1, forGrassZ}, 1.0f, GRAY);
